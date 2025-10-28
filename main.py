@@ -1,6 +1,7 @@
+import os
 import sys
-from typing import Optional, List, Dict, Any
-import sqlite3
+from typing import List, Dict, Any
+import pymssql
 from dotenv import load_dotenv
 
 from models.database import insert_parsed_data
@@ -8,11 +9,18 @@ from logiwa.api import get_api_token, get_shipments
 
 
 def save_shipments_to_sql(shipments: List[Dict[str, Any]]):
-    conn = sqlite3.connect("shipments.db")
+    conn = pymssql.connect(
+        server=os.getenv("SQL_SERVER_NAME"),
+        user=os.getenv("SQL_USER_NAME"),
+        password=os.getenv("SQL_PASSWORD"),
+        database=os.getenv("SQL_DATABASE_NAME"),
+    )
 
     for shipment in shipments:
         if not insert_parsed_data(connection=conn, parsed_data=shipment):
             print("failed to insert shipment")
+
+    conn.close()
 
     return
 

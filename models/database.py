@@ -2,9 +2,8 @@
 Database insertion module using SQLAlchemy
 """
 
-import sqlite3
+from pymssql import Error, Connection
 from typing import Dict, Any, List
-from sqlite3 import Error
 from datetime import datetime
 from dataclasses import asdict
 from decimal import Decimal
@@ -21,7 +20,7 @@ def _dataclass_to_dict(obj) -> Dict[str, Any]:
     return data
 
 
-def insert_order(connection: sqlite3.Connection, order) -> bool:
+def insert_order(connection: Connection, order) -> bool:
     """Insert main order record"""
     cursor = None
     try:
@@ -34,9 +33,10 @@ def insert_order(connection: sqlite3.Connection, order) -> bool:
         order_dict.pop("updated_at", None)
 
         columns = ", ".join(order_dict.keys())
-        # placeholders = ", ".join(["%s"] * len(order_dict)) # mssql
-        placeholders = ", ".join(["?"] * len(order_dict)) # sqlite3
-        query = f"INSERT OR IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})"
+        placeholders = ", ".join(["%s"] * len(order_dict)) # pymssql
+        # placeholders = ", ".join(["?"] * len(order_dict)) # sqlite3
+        query = f"INSERT IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})" # pymssql
+        # query = f"INSERT OR IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})" # sqlite3
 
         cursor.execute(query, list(order_dict.values()))
         connection.commit()
@@ -51,7 +51,7 @@ def insert_order(connection: sqlite3.Connection, order) -> bool:
             cursor.close()
 
 
-def insert_order_lines(connection: sqlite3.Connection, lines: List) -> bool:
+def insert_order_lines(connection: Connection, lines: List) -> bool:
     """Insert order line items in batch"""
     if not lines:
         return True
@@ -66,10 +66,11 @@ def insert_order_lines(connection: sqlite3.Connection, lines: List) -> bool:
             line_dict.pop("updated_at", None)
 
             columns = ", ".join(line_dict.keys())
-            # placeholders = ", ".join(["%s"] * len(line_dict)) # mssql
-            placeholders = ", ".join(["?"] * len(line_dict)) # sqlite3
+            placeholders = ", ".join(["%s"] * len(line_dict)) # mssql
+            # placeholders = ", ".join(["?"] * len(line_dict)) # sqlite3
             query = (
-                f"INSERT OR IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})"
+                f"INSERT IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})" # pymssql
+                # f"INSERT OR IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})" # sqlite3
             )
 
             cursor.execute(query, list(line_dict.values()))
@@ -86,7 +87,7 @@ def insert_order_lines(connection: sqlite3.Connection, lines: List) -> bool:
             cursor.close()
 
 
-def insert_addresses(connection: sqlite3.Connection, addresses: List) -> bool:
+def insert_addresses(connection: Connection, addresses: List) -> bool:
     """Insert address records"""
     if not addresses:
         return True
@@ -102,9 +103,10 @@ def insert_addresses(connection: sqlite3.Connection, addresses: List) -> bool:
             address_dict.pop("updated_at", None)
 
             columns = ", ".join(address_dict.keys())
-            # placeholders = ", ".join(["%s"] * len(address_dict)) # mssql
-            placeholders = ", ".join(["?"] * len(address_dict)) # sqlite3
-            query = f"INSERT OR IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})"
+            placeholders = ", ".join(["%s"] * len(address_dict)) # mssql
+            # placeholders = ", ".join(["?"] * len(address_dict)) # sqlite3
+            query = f"INSERT IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})" # pymssql
+            # query = f"INSERT OR IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})" # sqlite3
 
             cursor.execute(query, list(address_dict.values()))
 
@@ -121,7 +123,7 @@ def insert_addresses(connection: sqlite3.Connection, addresses: List) -> bool:
 
 
 def insert_mappings(
-    connection: sqlite3.Connection, mappings: List, table_name: str
+    connection: Connection, mappings: List, table_name: str
 ) -> bool:
     """Insert mapping records for junction tables"""
     if not mappings:
@@ -137,11 +139,11 @@ def insert_mappings(
             mapping_dict.pop("created_at", None)
 
             columns = ", ".join(mapping_dict.keys())
-            # placeholders = ", ".join(["%s"] * len(mapping_dict)) # mssql
-            placeholders = ", ".join(["?"] * len(mapping_dict)) # sqlite3
+            placeholders = ", ".join(["%s"] * len(mapping_dict)) # mssql
+            # placeholders = ", ".join(["?"] * len(mapping_dict)) # sqlite3
             query = (
-                # f"INSERT OR IGNORE IGNORE INTO {table_name} ({columns}) VALUES ({placeholders})" # mysql string
-                f"INSERT OR IGNORE INTO {table_name} ({columns}) VALUES ({placeholders})" # sqlite3 string
+                f"INSERT IGNORE INTO {table_name} ({columns}) VALUES ({placeholders})" # mysql string
+                # f"INSERT OR IGNORE INTO {table_name} ({columns}) VALUES ({placeholders})" # sqlite3 string
             )
 
             cursor.execute(query, list(mapping_dict.values()))
@@ -158,7 +160,7 @@ def insert_mappings(
             cursor.close()
 
 
-def insert_errors(connection: sqlite3.Connection, errors: List) -> bool:
+def insert_errors(connection: Connection, errors: List) -> bool:
     """Insert error records"""
     if not errors:
         return True
@@ -173,10 +175,11 @@ def insert_errors(connection: sqlite3.Connection, errors: List) -> bool:
             error_dict.pop("created_at", None)
 
             columns = ", ".join(error_dict.keys())
-            # placeholders = ", ".join(["%s"] * len(error_dict)) # mssql
-            placeholders = ", ".join(["?"] * len(error_dict)) # sqlite3
+            placeholders = ", ".join(["%s"] * len(error_dict)) # mssql
+            # placeholders = ", ".join(["?"] * len(error_dict)) # sqlite3
             query = (
-                f"INSERT OR IGNORE INTO shipment_order_error ({columns}) VALUES ({placeholders})"
+                f"INSERT IGNORE INTO shipment_order_error ({columns}) VALUES ({placeholders})" # pymssql
+                # f"INSERT OR IGNORE INTO shipment_order_error ({columns}) VALUES ({placeholders})" # sqlite3
             )
 
             cursor.execute(query, list(error_dict.values()))
@@ -194,7 +197,7 @@ def insert_errors(connection: sqlite3.Connection, errors: List) -> bool:
 
 
 def insert_parsed_data(
-    connection: sqlite3.Connection, parsed_data: Dict[str, Any]
+    connection: Connection, parsed_data: Dict[str, Any]
 ) -> bool:
     """
     Insert all parsed data in correct order
