@@ -1,44 +1,41 @@
-import requests
-import json
 import sys
+from typing import Optional, List, Dict, Any
+import sqlite3
 from dotenv import load_dotenv
-import os
 
-from typing import Optional
+from models.database import insert_parsed_data
+from logiwa.api import get_api_token, get_shipments
 
 
-def get_api_token() -> Optional[None]:
-    url = "https://wmsapi.logiwa.com/token"
+def save_shipments_to_sql(shipments: List[Dict[str, Any]]):
+    conn = sqlite3.connect("shipments.db")
 
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/json",
-    }
+    for shipment in shipments:
+        if not insert_parsed_data(connection=conn, parsed_data=shipment):
+            print("failed to insert shipment")
 
-    body = {
-        "grant_type": "password",
-        "username": os.getenv("LOGIWA_USERNAME"),
-        "password": os.getenv("LOGIWA_PASSWORD"),
-    }
+    return
 
-    res = requests.post(url, data=body, headers=headers)
 
-    print(res.text)
-
-    res_body = res.json()
-    if res_body.get("error"):
-        print(res_body.get("error"))
+def main() -> int:
+    if get_api_token():
+        print("got API token from Logiwa")
     else:
-        return res.json()["access_token"]
+        print("failed to get API token")
+        return -1
 
+    shipments = get_shipments()
+    if shipments is None:
+        print("failed to contact Logiwa API")
+        return -1
 
-def main():
-    print(get_api_token())
-    print("Hello from logiwa-shipments!")
+    save_shipments_to_sql(shipments)
+
+    return 0
 
 
 if __name__ == "__main__":
     if not load_dotenv():
         print("failed to load dotenv")
         sys.exit(1)
-    main()
+    sys.exit(main())
