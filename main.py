@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         level=logging.DEBUG,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        stream=sys.stdout
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        stream=sys.stdout,
     )
     sys.exit(main())
