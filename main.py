@@ -3,6 +3,7 @@ import sys
 from typing import List, Dict, Any
 import pymssql
 from dotenv import load_dotenv
+import logging
 
 from models.database import insert_parsed_data
 from logiwa.api import get_api_token, get_shipments
@@ -27,14 +28,14 @@ def save_shipments_to_sql(shipments: List[Dict[str, Any]]):
 
 def main() -> int:
     if get_api_token():
-        print("got API token from Logiwa")
+        logging.error("got API token from Logiwa")
     else:
-        print("failed to get API token")
+        logging.error("failed to get API token")
         return -1
 
     shipments = get_shipments()
     if shipments is None:
-        print("failed to contact Logiwa API")
+        logging.error("failed to contact Logiwa API")
         return -1
 
     save_shipments_to_sql(shipments)
@@ -46,4 +47,10 @@ if __name__ == "__main__":
     if not load_dotenv():
         print("failed to load dotenv")
         sys.exit(1)
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        stream=sys.stdout
+    )
     sys.exit(main())

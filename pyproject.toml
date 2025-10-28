@@ -8,4 +8,5 @@ dependencies = [
     "requests",
     "dotenv",
     "pymssql",
+    "aiohttp>=3.13.1",
 ]
