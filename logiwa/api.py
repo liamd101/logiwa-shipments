@@ -7,6 +7,8 @@ import asyncio
 import aiohttp
 import time
 import requests
+# from pymssql import Connection
+from sqlite3 import Connection
 
 from models.parsing import WarehouseOrderParser
 
@@ -149,7 +151,7 @@ async def fetch_warehouse_pages(
     return all_orders
 
 
-async def get_shipments_async() -> Optional[List[Dict[str, Any]]]:
+async def get_shipments_async(conn: Connection) -> Optional[List[Dict[str, Any]]]:
     """
     Queries the Logiwa API asynchronously and returns a List of ShipmentInfo
     Shipments are only queried within the past or next 45 days
@@ -182,19 +184,32 @@ async def get_shipments_async() -> Optional[List[Dict[str, Any]]]:
         order for warehouse_orders in warehouse_results for order in warehouse_orders
     ]
 
+    insert_query = """
+    INSERT INTO staging_warehouse_orders (order_id, raw_json, fetch_timestamp)
+    VALUES (?, ?, ?)
+    """ # sqlite3
+    # insert_query = """
+    # INSERT INTO staging_warehouse_orders (order_id, raw_json, fetch_timestamp)
+    # VALUES (%s, %s, %s)
+    # """ # pymssql
+
+    cur = conn.cursor()
     # Write to staging file and parse
     shipments = []
-    with open("data.jsonl", "a") as staging_file:
-        for order_data in all_orders:
-            staging_file.write(json.dumps(order_data) + "\n")
-            shipment = WarehouseOrderParser().parse_response(order_data)
-            if shipment:
-                shipments.append(shipment)
+    for order_data in all_orders:
+        order_id = order_data.get("ID")
+        raw_json = json.dumps(order_data)
+        fetch_timestamp = datetime.now()
+
+        cur.execute(insert_query, (order_id, raw_json, fetch_timestamp))
+        shipment = WarehouseOrderParser().parse_response(order_data)
+        if shipment:
+            shipments.append(shipment)
 
     info(f"Pulled {len(shipments)} shipments from Logiwa")
     return shipments
 
 
-def get_shipments() -> Optional[List[Dict[str, Any]]]:
+def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
     """Synchronous wrapper for the async function"""
-    return asyncio.run(get_shipments_async())
+    return asyncio.run(get_shipments_async(conn))

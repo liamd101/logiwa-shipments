@@ -18,6 +18,8 @@ from .datastructs import (
     ShipmentOrderError,
 )
 
+from logging import error
+
 
 class WarehouseOrderParser:
     """Parse warehouse order API responses into normalized data structures"""
@@ -51,7 +53,8 @@ class WarehouseOrderParser:
             return None
         try:
             return Decimal(str(value))
-        except:
+        except Exception as e:
+            error(e)
             return None
 
     @staticmethod
@@ -61,7 +64,8 @@ class WarehouseOrderParser:
             return None
         try:
             return int(value)
-        except:
+        except Exception as e:
+            error(e)
             return None
 
     @staticmethod
@@ -552,16 +556,16 @@ class WarehouseOrderParser:
         errors = []
         warehouse_order_id = data["ID"]
 
-        for error in data.get("Errors", []):
-            if error:
+        for order_error in data.get("Errors", []):
+            if order_error:
                 error_obj = ShipmentOrderError(
                     id=0,  # Will be auto-generated
                     warehouse_order_id=warehouse_order_id,
-                    error_message=str(error)
-                    if isinstance(error, str)
-                    else str(error.get("message", error)),
-                    error_code=error.get("code") if isinstance(error, dict) else None,
-                    error_field=error.get("field") if isinstance(error, dict) else None,
+                    error_message=str(order_error)
+                    if isinstance(order_error, str)
+                    else str(order_error.get("message", order_error)),
+                    error_code=order_error.get("code") if isinstance(order_error, dict) else None,
+                    error_field=order_error.get("field") if isinstance(order_error, dict) else None,
                     created_at=datetime.now(),
                 )
                 errors.append(error_obj)

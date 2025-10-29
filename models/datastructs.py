@@ -4,7 +4,7 @@ Normalized structure for SQL storage
 """
 
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
 from decimal import Decimal
 
