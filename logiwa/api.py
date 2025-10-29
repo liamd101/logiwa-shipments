@@ -7,6 +7,7 @@ import asyncio
 import aiohttp
 import time
 import requests
+
 # from pymssql import Connection
 from sqlite3 import Connection
 
@@ -187,7 +188,7 @@ async def get_shipments_async(conn: Connection) -> Optional[List[Dict[str, Any]]
     insert_query = """
     INSERT INTO staging_warehouse_orders (order_id, raw_json, fetch_timestamp)
     VALUES (?, ?, ?)
-    """ # sqlite3
+    """  # sqlite3
     # insert_query = """
     # INSERT INTO staging_warehouse_orders (order_id, raw_json, fetch_timestamp)
     # VALUES (%s, %s, %s)

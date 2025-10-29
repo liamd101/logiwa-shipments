@@ -564,8 +564,12 @@ class WarehouseOrderParser:
                     error_message=str(order_error)
                     if isinstance(order_error, str)
                     else str(order_error.get("message", order_error)),
-                    error_code=order_error.get("code") if isinstance(order_error, dict) else None,
-                    error_field=order_error.get("field") if isinstance(order_error, dict) else None,
+                    error_code=order_error.get("code")
+                    if isinstance(order_error, dict)
+                    else None,
+                    error_field=order_error.get("field")
+                    if isinstance(order_error, dict)
+                    else None,
                     created_at=datetime.now(),
                 )
                 errors.append(error_obj)
