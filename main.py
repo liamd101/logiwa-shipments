@@ -27,8 +27,8 @@ def main() -> int:
 
     conn = pymssql.connect(
         server=os.getenv("SQL_SERVER_NAME"),
-        user=os.getenv("SQL_USER_NAME"),
-        password=os.getenv("SQL_PASSWORD"),
+        # user=os.getenv("SQL_USER_NAME"),
+        # password=os.getenv("SQL_PASSWORD"),
         database=os.getenv("SQL_DATABASE_NAME"),
     )
 
