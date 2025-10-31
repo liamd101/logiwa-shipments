@@ -69,6 +69,7 @@ def fetch_page(
     window: timedelta,
     headers: Dict[str, str],
     url: str,
+    last_modified_date: Optional[str],
 ) -> Optional[List[Dict[str, Any]]]:
     """Fetch a single page of data"""
     params = {
@@ -80,6 +81,8 @@ def fetch_page(
         "PageSize": 200,
         "SelectedPageIndex": page_index,
     }
+    if last_modified_date:
+        params["LastModifiedDate_Start"] = datetime.strptime(last_modified_date,"%Y-%m-%d %H:%M:%S").strftime("%m.%d.%Y %H:%M:%S")
 
     response = requests.post(url, json=params, headers=headers)
     response_data = response.json()
@@ -94,6 +97,7 @@ def fetch_warehouse_pages(
     window: timedelta,
     headers: Dict[str, str],
     url: str,
+    last_modified_date: Optional[str],
 ) -> List[Dict[str, Any]]:
     """Fetch all pages for a single warehouse"""
     debug(f"Processing shipments out of warehouse {warehouse}")
@@ -104,7 +108,7 @@ def fetch_warehouse_pages(
         if page_index > 3:
             break
 
-        data = fetch_page(warehouse, page_index, window, headers, url)
+        data = fetch_page(warehouse, page_index, window, headers, url, last_modified_date)
         if data is None:
             break
 
@@ -112,6 +116,13 @@ def fetch_warehouse_pages(
         page_index += 1
 
     return all_orders
+
+
+def get_most_recent_modified_date(conn: Connection) -> Optional[str]:
+    cursor = conn.cursor()
+    cursor.execute("SELECT MAX(last_modified_date) FROM shipment_order")
+    result = cursor.fetchone()
+    return result[0] if result and result[0] is not None else None
 
 
 def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
@@ -130,11 +141,12 @@ def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
     }
 
     window = timedelta(days=45)
+    last_modified_date_stored = get_most_recent_modified_date(conn)
 
     # Fetch all warehouses sequentially
     all_orders = []
     for warehouse in warehouses:
-        warehouse_orders = fetch_warehouse_pages(warehouse, window, headers, url)
+        warehouse_orders = fetch_warehouse_pages(warehouse, window, headers, url, last_modified_date_stored,)
         all_orders.extend(warehouse_orders)
 
     insert_query = """
