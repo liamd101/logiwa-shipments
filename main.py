@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 import pymssql
 from pymssql import Connection
@@ -14,7 +14,18 @@ from models.database import insert_parsed_data
 from logiwa.api import get_api_token, get_shipments
 
 
-def save_shipments_to_sql(conn: Connection, shipments: List[Dict[str, Any]]):
+def load_from_staging(conn: Connection) -> Optional[List[Dict[str, Any]]]:
+    select_query = """
+    SELECT order_id, raw_json, fetch_timestamp
+    FROM staging_warehouse_orders
+    ORDER BY fetch_timestamp DESC
+    LIMIT ?
+    """
+
+    return []
+
+
+def save_shipments_to_sql(conn: Connection):
     for shipment in shipments:
         if not insert_parsed_data(connection=conn, parsed_data=shipment):
             logging.error("failed to insert shipment")
@@ -40,12 +51,9 @@ def main() -> int:
 
     # conn = sqlite3.connect("shipments.db")
 
-    shipments = get_shipments(conn)
-    if shipments is None:
-        logging.error("failed to contact Logiwa API")
-        return -1
+    get_shipments(conn)
 
-    save_shipments_to_sql(conn, shipments)
+    save_shipments_to_sql(conn)
     conn.close()
 
     return 0

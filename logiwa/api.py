@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import json
 from logging import debug, info, error
 import requests
+import time
 
 from pymssql import Connection
 # from sqlite3 import Connection
@@ -87,6 +88,17 @@ def fetch_page(
         ).strftime("%m.%d.%Y %H:%M:%S")
 
     response = requests.post(url, json=params, headers=headers)
+    if response.status_code == 403:
+        time.sleep(2)
+        return fetch_page(
+            warehouse,
+            page_index,
+            window,
+            headers,
+            url,
+            last_modified_date,
+        )
+
     response_data = response.json()
     data = response_data.get("Data", [])
     debug(f"Warehouse {warehouse}, Page {page_index}: Received {len(data)} orders")
@@ -95,31 +107,52 @@ def fetch_page(
 
 
 def fetch_warehouse_pages(
+    conn: Connection,
     warehouse: int,
     window: timedelta,
     headers: Dict[str, str],
     url: str,
     last_modified_date: Optional[str],
-) -> List[Dict[str, Any]]:
+):
     """Fetch all pages for a single warehouse"""
     debug(f"Processing shipments out of warehouse {warehouse}")
     all_orders = []
     page_index = 1
 
-    while True:
-        if page_index > 3:
-            break
+    # insert_query = """
+    # INSERT INTO staging_shipment_order (order_id, raw_json, fetch_timestamp)
+    # VALUES (?, ?, ?)
+    # """  # sqlite3
+    insert_query = """
+    INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
+    VALUES (%s, %s, %s)
+    """  # pymssql
 
+    cur = conn.cursor()
+    while True:
         data = fetch_page(
-            warehouse, page_index, window, headers, url, last_modified_date
+            warehouse,
+            page_index,
+            window,
+            headers,
+            url,
+            last_modified_date,
         )
         if data is None:
             break
 
+        for order_data in data:
+            order_id = order_data.get("ID")
+            raw_json = json.dumps(order_data)
+            fetch_timestamp = datetime.now()
+
+            cur.execute(insert_query, (order_id, raw_json, fetch_timestamp))
+
         all_orders.extend(data)
         page_index += 1
 
-    return all_orders
+    conn.commit()
+    conn.close()
 
 
 def get_most_recent_modified_date(conn: Connection) -> Optional[str]:
@@ -129,7 +162,7 @@ def get_most_recent_modified_date(conn: Connection) -> Optional[str]:
     return result[0] if result and result[0] is not None else None
 
 
-def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
+def get_shipments(conn: Connection):
     """
     Queries the Logiwa API synchronously and returns a List of ShipmentInfo
     Shipments are only queried within the past or next 45 days
@@ -148,38 +181,12 @@ def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
     last_modified_date_stored = get_most_recent_modified_date(conn)
 
     # Fetch all warehouses sequentially
-    all_orders = []
     for warehouse in warehouses:
-        warehouse_orders = fetch_warehouse_pages(
+        fetch_warehouse_pages(
+            conn,
             warehouse,
             window,
             headers,
             url,
             last_modified_date_stored,
         )
-        all_orders.extend(warehouse_orders)
-
-    # insert_query = """
-    # INSERT INTO staging_shipment_order (order_id, raw_json, fetch_timestamp)
-    # VALUES (?, ?, ?)
-    # """  # sqlite3
-    insert_query = """
-    INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
-    VALUES (%s, %s, %s)
-    """ # pymssql
-
-    cur = conn.cursor()
-    # Write to staging file and parse
-    shipments = []
-    for order_data in all_orders:
-        order_id = order_data.get("ID")
-        raw_json = json.dumps(order_data)
-        fetch_timestamp = datetime.now()
-
-        cur.execute(insert_query, (order_id, raw_json, fetch_timestamp))
-        shipment = WarehouseOrderParser().parse_response(order_data)
-        if shipment:
-            shipments.append(shipment)
-
-    info(f"Pulled {len(shipments)} shipments from Logiwa")
-    return shipments
