@@ -2,10 +2,10 @@ import os
 import sys
 from typing import List, Dict, Any
 
-# import pymssql
-# from pymssql import Connection
-import sqlite3
-from sqlite3 import Connection
+import pymssql
+from pymssql import Connection
+# import sqlite3
+# from sqlite3 import Connection
 from dotenv import load_dotenv
 import logging
 
@@ -30,14 +30,14 @@ def main() -> int:
         logging.error("failed to get API token")
         return -1
 
-    # conn = pymssql.connect(
-    #     server=os.getenv("SQL_SERVER_NAME"),
-    #     user=os.getenv("SQL_USER_NAME"),
-    #     password=os.getenv("SQL_PASSWORD"),
-    #     database=os.getenv("SQL_DATABASE_NAME"),
-    # )
+    conn = pymssql.connect(
+        server=os.getenv("SQL_SERVER_NAME"),
+        user=os.getenv("SQL_USER_NAME"),
+        password=os.getenv("SQL_PASSWORD"),
+        database=os.getenv("SQL_DATABASE_NAME"),
+    )
 
-    conn = sqlite3.connect("shipments.db")
+    # conn = sqlite3.connect("shipments.db")
 
     shipments = get_shipments(conn)
     if shipments is None:

@@ -82,7 +82,9 @@ def fetch_page(
         "SelectedPageIndex": page_index,
     }
     if last_modified_date:
-        params["LastModifiedDate_Start"] = datetime.strptime(last_modified_date,"%Y-%m-%d %H:%M:%S").strftime("%m.%d.%Y %H:%M:%S")
+        params["LastModifiedDate_Start"] = datetime.strptime(
+            last_modified_date, "%Y-%m-%d %H:%M:%S"
+        ).strftime("%m.%d.%Y %H:%M:%S")
 
     response = requests.post(url, json=params, headers=headers)
     response_data = response.json()
@@ -108,7 +110,9 @@ def fetch_warehouse_pages(
         if page_index > 3:
             break
 
-        data = fetch_page(warehouse, page_index, window, headers, url, last_modified_date)
+        data = fetch_page(
+            warehouse, page_index, window, headers, url, last_modified_date
+        )
         if data is None:
             break
 
@@ -146,7 +150,13 @@ def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
     # Fetch all warehouses sequentially
     all_orders = []
     for warehouse in warehouses:
-        warehouse_orders = fetch_warehouse_pages(warehouse, window, headers, url, last_modified_date_stored,)
+        warehouse_orders = fetch_warehouse_pages(
+            warehouse,
+            window,
+            headers,
+            url,
+            last_modified_date_stored,
+        )
         all_orders.extend(warehouse_orders)
 
     insert_query = """
@@ -154,7 +164,7 @@ def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
     VALUES (?, ?, ?)
     """  # sqlite3
     # insert_query = """
-    # INSERT INTO dbo.staging_warehouse_orders (order_id, raw_json, fetch_timestamp)
+    # INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
     # VALUES (%s, %s, %s)
     # """ # pymssql
 

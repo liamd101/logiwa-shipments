@@ -37,7 +37,11 @@ def insert_order(connection: Connection, order) -> bool:
 
         columns = ", ".join(order_dict.keys())
         # placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
-        # query = f"INSERT IGNORE INTO dbo.shipment_order ({columns}) VALUES ({placeholders})"  # pymssql
+        # query = f"INSERT IGNORE INTO dbo.ShipmentOrder ({columns}) VALUES ({placeholders})"  # pymssql
+        
+        # cursor.execute("DELETE FROM dbo.ShipmentOrder WHERE id = %s", order.id)
+        cursor.execute("DELETE FROM shipment_order WHERE id = ?", order.id)
+
         placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
         query = f"INSERT OR IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})"  # sqlite3
 
@@ -70,7 +74,7 @@ def insert_order_lines(connection: Connection, lines: List) -> bool:
 
             columns = ", ".join(line_dict.keys())
             # placeholders = ", ".join(["%s"] * len(line_dict))  # pymssql
-            # query = f"INSERT IGNORE INTO dbo.shipment_order_line ({columns}) VALUES ({placeholders})"  # pymssql
+            # query = f"INSERT IGNORE INTO dbo.ShipmentOrder_Line ({columns}) VALUES ({placeholders})"  # pymssql
             placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
             query = f"INSERT OR IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})"  # sqlite3
 
@@ -105,7 +109,7 @@ def insert_addresses(connection: Connection, addresses: List) -> bool:
 
             columns = ", ".join(address_dict.keys())
             # placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
-            # query = f"INSERT IGNORE INTO dbo.shipment_order_address ({columns}) VALUES ({placeholders})"  # pymssql
+            # query = f"INSERT IGNORE INTO dbo.ShipmentOrder_Address ({columns}) VALUES ({placeholders})"  # pymssql
             placeholders = ", ".join(["?"] * len(address_dict))  # sqlite3
             query = f"INSERT OR IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})"  # sqlite3
 
