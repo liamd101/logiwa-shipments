@@ -37,8 +37,8 @@ def insert_order(connection: Connection, order) -> bool:
 
         columns = ", ".join(order_dict.keys())
         # placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
-        placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
         # query = f"INSERT IGNORE INTO dbo.shipment_order ({columns}) VALUES ({placeholders})"  # pymssql
+        placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
         query = f"INSERT OR IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})"  # sqlite3
 
         cursor.execute(query, list(order_dict.values()))
@@ -70,11 +70,9 @@ def insert_order_lines(connection: Connection, lines: List) -> bool:
 
             columns = ", ".join(line_dict.keys())
             # placeholders = ", ".join(["%s"] * len(line_dict))  # pymssql
+            # query = f"INSERT IGNORE INTO dbo.shipment_order_line ({columns}) VALUES ({placeholders})"  # pymssql
             placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
-            query = (
-                # f"INSERT IGNORE INTO dbo.shipment_order_line ({columns}) VALUES ({placeholders})"  # pymssql
-                f"INSERT OR IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})"  # sqlite3
-            )
+            query = f"INSERT OR IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})"  # sqlite3
 
             cursor.execute(query, list(line_dict.values()))
 
@@ -107,8 +105,8 @@ def insert_addresses(connection: Connection, addresses: List) -> bool:
 
             columns = ", ".join(address_dict.keys())
             # placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
-            placeholders = ", ".join(["?"] * len(address_dict))  # sqlite3
             # query = f"INSERT IGNORE INTO dbo.shipment_order_address ({columns}) VALUES ({placeholders})"  # pymssql
+            placeholders = ", ".join(["?"] * len(address_dict))  # sqlite3
             query = f"INSERT OR IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})"  # sqlite3
 
             cursor.execute(query, list(address_dict.values()))
@@ -118,6 +116,22 @@ def insert_addresses(connection: Connection, addresses: List) -> bool:
         return True
     except Error as e:
         logging.error(f"Error inserting addresses: {e}")
+        connection.rollback()
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def clean_staging_table(connection: Connection, id: int) -> bool:
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("DELETE FROM staging_shipment_order WHERE order_id = ?", (id,))
+        connection.commit()
+        return True
+    except Error as e:
+        logging.error(f"Error deleting entry: {e}")
         connection.rollback()
         return False
     finally:
@@ -142,6 +156,9 @@ def insert_parsed_data(connection: Connection, parsed_data: Dict[str, Any]) -> b
         success &= insert_order(connection, parsed_data["order"])
         success &= insert_order_lines(connection, parsed_data["lines"])
         success &= insert_addresses(connection, parsed_data["addresses"])
+
+        if success:
+            clean_staging_table(connection, parsed_data["order"].id)
 
         return success
 
