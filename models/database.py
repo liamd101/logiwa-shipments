@@ -38,7 +38,7 @@ def insert_order(connection: Connection, order) -> bool:
         columns = ", ".join(order_dict.keys())
         # placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
         # query = f"INSERT IGNORE INTO dbo.ShipmentOrder ({columns}) VALUES ({placeholders})"  # pymssql
-        
+
         # cursor.execute("DELETE FROM dbo.ShipmentOrder WHERE id = %s", order.id)
         cursor.execute("DELETE FROM shipment_order WHERE id = ?", order.id)
 
