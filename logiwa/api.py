@@ -5,8 +5,8 @@ import json
 from logging import debug, info, error
 import requests
 
-# from pymssql import Connection
-from sqlite3 import Connection
+from pymssql import Connection
+# from sqlite3 import Connection
 
 from models.parsing import WarehouseOrderParser
 
@@ -159,14 +159,14 @@ def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
         )
         all_orders.extend(warehouse_orders)
 
-    insert_query = """
-    INSERT INTO staging_shipment_order (order_id, raw_json, fetch_timestamp)
-    VALUES (?, ?, ?)
-    """  # sqlite3
     # insert_query = """
-    # INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
-    # VALUES (%s, %s, %s)
-    # """ # pymssql
+    # INSERT INTO staging_shipment_order (order_id, raw_json, fetch_timestamp)
+    # VALUES (?, ?, ?)
+    # """  # sqlite3
+    insert_query = """
+    INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
+    VALUES (%s, %s, %s)
+    """ # pymssql
 
     cur = conn.cursor()
     # Write to staging file and parse
