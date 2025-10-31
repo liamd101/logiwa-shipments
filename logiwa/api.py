@@ -3,9 +3,6 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 import json
 from logging import debug, info, error
-import asyncio
-import aiohttp
-import time
 import requests
 
 # from pymssql import Connection
@@ -66,34 +63,7 @@ def get_warehouses() -> Optional[List[int]]:
         return warehouses
 
 
-# Global rate limit configuration (in milliseconds)
-MIN_MS_BETWEEN_REQUESTS = 113  # Adjust this as needed (e.g., 100ms = 10 requests/sec)
-
-
-class RateLimiter:
-    """Simple rate limiter based on minimum time between requests"""
-
-    def __init__(self, min_ms_between_requests: int):
-        self.min_delay = min_ms_between_requests / 1000.0  # Convert to seconds
-        self.last_request_time = 0
-        self.lock = asyncio.Lock()
-
-    async def acquire(self):
-        async with self.lock:
-            now = time.time()
-            time_since_last = now - self.last_request_time
-
-            if time_since_last < self.min_delay:
-                # Wait for the remaining time
-                sleep_time = self.min_delay - time_since_last
-                await asyncio.sleep(sleep_time)
-
-            self.last_request_time = time.time()
-
-
-async def fetch_page(
-    session: aiohttp.ClientSession,
-    rate_limiter: RateLimiter,
+def fetch_page(
     warehouse: int,
     page_index: int,
     window: timedelta,
@@ -101,8 +71,6 @@ async def fetch_page(
     url: str,
 ) -> Optional[List[Dict[str, Any]]]:
     """Fetch a single page of data"""
-    await rate_limiter.acquire()
-
     params = {
         "OrderDate_Start": (datetime.now() - window).strftime("%m.%d.%Y %H:%M:%S"),
         "OrderDate_End": (datetime.now() + window).strftime("%m.%d.%Y %H:%M:%S"),
@@ -113,22 +81,15 @@ async def fetch_page(
         "SelectedPageIndex": page_index,
     }
 
-    try:
-        async with session.post(url, json=params, headers=headers) as response:
-            response_data = await response.json()
-            data = response_data.get("Data", [])
-            debug(
-                f"Warehouse {warehouse}, Page {page_index}: Received {len(data)} orders"
-            )
-            return data if data else None
-    except Exception as e:
-        debug(f"Error fetching warehouse {warehouse}, page {page_index}: {e}")
-        return None
+    response = requests.post(url, json=params, headers=headers)
+    response_data = response.json()
+    data = response_data.get("Data", [])
+    debug(f"Warehouse {warehouse}, Page {page_index}: Received {len(data)} orders")
+
+    return data if data else None
 
 
-async def fetch_warehouse_pages(
-    session: aiohttp.ClientSession,
-    rate_limiter: RateLimiter,
+def fetch_warehouse_pages(
     warehouse: int,
     window: timedelta,
     headers: Dict[str, str],
@@ -140,9 +101,10 @@ async def fetch_warehouse_pages(
     page_index = 1
 
     while True:
-        data = await fetch_page(
-            session, rate_limiter, warehouse, page_index, window, headers, url
-        )
+        if page_index > 3:
+            break
+
+        data = fetch_page(warehouse, page_index, window, headers, url)
         if data is None:
             break
 
@@ -152,9 +114,9 @@ async def fetch_warehouse_pages(
     return all_orders
 
 
-async def get_shipments_async(conn: Connection) -> Optional[List[Dict[str, Any]]]:
+def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
     """
-    Queries the Logiwa API asynchronously and returns a List of ShipmentInfo
+    Queries the Logiwa API synchronously and returns a List of ShipmentInfo
     Shipments are only queried within the past or next 45 days
     """
     warehouses = get_warehouses()
@@ -168,29 +130,19 @@ async def get_shipments_async(conn: Connection) -> Optional[List[Dict[str, Any]]
     }
 
     window = timedelta(days=45)
-    rate_limiter = RateLimiter(MIN_MS_BETWEEN_REQUESTS)
 
-    async with aiohttp.ClientSession() as session:
-        # Fetch all warehouses concurrently
-        tasks = [
-            fetch_warehouse_pages(
-                session, rate_limiter, warehouse, window, headers, url
-            )
-            for warehouse in warehouses
-        ]
-        warehouse_results = await asyncio.gather(*tasks)
-
-    # Flatten results and process
-    all_orders = [
-        order for warehouse_orders in warehouse_results for order in warehouse_orders
-    ]
+    # Fetch all warehouses sequentially
+    all_orders = []
+    for warehouse in warehouses:
+        warehouse_orders = fetch_warehouse_pages(warehouse, window, headers, url)
+        all_orders.extend(warehouse_orders)
 
     insert_query = """
-    INSERT INTO staging_warehouse_orders (order_id, raw_json, fetch_timestamp)
+    INSERT INTO staging_shipment_order (order_id, raw_json, fetch_timestamp)
     VALUES (?, ?, ?)
     """  # sqlite3
     # insert_query = """
-    # INSERT INTO staging_warehouse_orders (order_id, raw_json, fetch_timestamp)
+    # INSERT INTO dbo.staging_warehouse_orders (order_id, raw_json, fetch_timestamp)
     # VALUES (%s, %s, %s)
     # """ # pymssql
 
@@ -209,8 +161,3 @@ async def get_shipments_async(conn: Connection) -> Optional[List[Dict[str, Any]]
 
     info(f"Pulled {len(shipments)} shipments from Logiwa")
     return shipments
-
-
-def get_shipments(conn: Connection) -> Optional[List[Dict[str, Any]]]:
-    """Synchronous wrapper for the async function"""
-    return asyncio.run(get_shipments_async(conn))

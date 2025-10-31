@@ -10,12 +10,6 @@ from .datastructs import (
     ShipmentOrder,
     ShipmentOrderLine,
     ShipmentOrderAddress,
-    ShipmentOrderStatusMapping,
-    ShipmentOrderCarrierMapping,
-    ShipmentOrderChannelMapping,
-    ShipmentOrderCustomStatusMapping,
-    ShipmentOrderFBAStatusMapping,
-    ShipmentOrderError,
 )
 
 from logging import error
@@ -354,11 +348,36 @@ class WarehouseOrderParser:
         warehouse_order_id = data["ID"]
 
         details = data.get("DetailInfo", [])
-        if not details:
+        if details is None:
             return []
 
-        for detail in data.get("DetailInfo", []):
+        warehouse_status_ids = data.get("WarehouseOrderStatusID", [])
+        if warehouse_status_ids is None:
+            warehouse_status_ids = []
+
+        custom_status_ids = data.get("OrderCustomStatusID", [])
+        if custom_status_ids is None:
+            custom_status_ids = []
+
+        fba_status_ids = data.get("WarehouseFBAOrderStatusID", [])
+        if fba_status_ids is None:
+            fba_status_ids = []
+
+        for (
+            detail,
+            warehouse_status_id,
+            custom_status_id,
+            fba_status_id,
+        ) in zip(
+            details,
+            warehouse_status_ids,
+            custom_status_ids,
+            fba_status_ids,
+        ):
             line = ShipmentOrderLine(
+                warehouse_status_id=warehouse_status_id,
+                custom_status_id=custom_status_id,
+                fba_status_id=fba_status_id,
                 id=detail["ID"],
                 code=detail["Code"],
                 warehouse_order_id=warehouse_order_id,
@@ -456,126 +475,6 @@ class WarehouseOrderParser:
 
         return addresses
 
-    def parse_status_mappings(
-        self, data: Dict[str, Any]
-    ) -> List[ShipmentOrderStatusMapping]:
-        """Parse WarehouseOrderStatusID array"""
-        mappings = []
-        warehouse_order_id = data["ID"]
-
-        for status_id in data.get("WarehouseOrderStatusID", []):
-            if status_id:
-                mapping = ShipmentOrderStatusMapping(
-                    id=0,  # Will be auto-generated
-                    warehouse_order_id=warehouse_order_id,
-                    status_id=status_id,
-                    created_at=datetime.now(),
-                )
-                mappings.append(mapping)
-
-        return mappings
-
-    def parse_carrier_mappings(
-        self, data: Dict[str, Any]
-    ) -> List[ShipmentOrderCarrierMapping]:
-        """Parse CarrierID array"""
-        mappings = []
-        warehouse_order_id = data["ID"]
-
-        for carrier_id in data.get("CarrierID", []):
-            if carrier_id:
-                mapping = ShipmentOrderCarrierMapping(
-                    id=0,  # Will be auto-generated
-                    warehouse_order_id=warehouse_order_id,
-                    carrier_id=carrier_id,
-                    created_at=datetime.now(),
-                )
-                mappings.append(mapping)
-
-        return mappings
-
-    def parse_channel_mappings(
-        self, data: Dict[str, Any]
-    ) -> List[ShipmentOrderChannelMapping]:
-        """Parse ChannelID array"""
-        mappings = []
-        warehouse_order_id = data["ID"]
-
-        for channel_id in data.get("ChannelID", []):
-            if channel_id:
-                mapping = ShipmentOrderChannelMapping(
-                    id=0,  # Will be auto-generated
-                    warehouse_order_id=warehouse_order_id,
-                    channel_id=channel_id,
-                    created_at=datetime.now(),
-                )
-                mappings.append(mapping)
-
-        return mappings
-
-    def parse_custom_status_mappings(
-        self, data: Dict[str, Any]
-    ) -> List[ShipmentOrderCustomStatusMapping]:
-        """Parse OrderCustomStatusID array"""
-        mappings = []
-        warehouse_order_id = data["ID"]
-
-        for custom_status_id in data.get("OrderCustomStatusID", []):
-            if custom_status_id:
-                mapping = ShipmentOrderCustomStatusMapping(
-                    id=0,  # Will be auto-generated
-                    warehouse_order_id=warehouse_order_id,
-                    custom_status_id=custom_status_id,
-                    created_at=datetime.now(),
-                )
-                mappings.append(mapping)
-
-        return mappings
-
-    def parse_fba_status_mappings(
-        self, data: Dict[str, Any]
-    ) -> List[ShipmentOrderFBAStatusMapping]:
-        """Parse WarehouseFBAOrderStatusID array"""
-        mappings = []
-        warehouse_order_id = data["ID"]
-
-        for fba_status_id in data.get("WarehouseFBAOrderStatusID", []):
-            if fba_status_id:
-                mapping = ShipmentOrderFBAStatusMapping(
-                    id=0,  # Will be auto-generated
-                    warehouse_order_id=warehouse_order_id,
-                    fba_status_id=fba_status_id,
-                    created_at=datetime.now(),
-                )
-                mappings.append(mapping)
-
-        return mappings
-
-    def parse_errors(self, data: Dict[str, Any]) -> List[ShipmentOrderError]:
-        """Parse Errors array"""
-        errors = []
-        warehouse_order_id = data["ID"]
-
-        for order_error in data.get("Errors", []):
-            if order_error:
-                error_obj = ShipmentOrderError(
-                    id=0,  # Will be auto-generated
-                    warehouse_order_id=warehouse_order_id,
-                    error_message=str(order_error)
-                    if isinstance(order_error, str)
-                    else str(order_error.get("message", order_error)),
-                    error_code=order_error.get("code")
-                    if isinstance(order_error, dict)
-                    else None,
-                    error_field=order_error.get("field")
-                    if isinstance(order_error, dict)
-                    else None,
-                    created_at=datetime.now(),
-                )
-                errors.append(error_obj)
-
-        return errors
-
     def parse_response(self, json_data: str) -> Dict[str, Any]:
         """
         Parse complete API response and return all normalized data structures
@@ -585,12 +484,6 @@ class WarehouseOrderParser:
             - order: ShipmentOrder
             - lines: List[ShipmentOrderLine]
             - addresses: List[ShipmentOrderAddress]
-            - status_mappings: List[ShipmentOrderStatusMapping]
-            - carrier_mappings: List[ShipmentOrderCarrierMapping]
-            - channel_mappings: List[ShipmentOrderChannelMapping]
-            - custom_status_mappings: List[ShipmentOrderCustomStatusMapping]
-            - fba_status_mappings: List[ShipmentOrderFBAStatusMapping]
-            - errors: List[ShipmentOrderError]
         """
         data = json.loads(json_data) if isinstance(json_data, str) else json_data
 
@@ -598,10 +491,4 @@ class WarehouseOrderParser:
             "order": self.parse_order(data),
             "lines": self.parse_order_lines(data),
             "addresses": self.parse_addresses(data),
-            "status_mappings": self.parse_status_mappings(data),
-            "carrier_mappings": self.parse_carrier_mappings(data),
-            "channel_mappings": self.parse_channel_mappings(data),
-            "custom_status_mappings": self.parse_custom_status_mappings(data),
-            "fba_status_mappings": self.parse_fba_status_mappings(data),
-            "errors": self.parse_errors(data),
         }

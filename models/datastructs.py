@@ -251,6 +251,9 @@ class ShipmentOrderLine:
     quarantine_reason: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    warehouse_status_id: Optional[int] = None
+    custom_status_id: Optional[int] = None
+    fba_status_id: Optional[int] = None
 
 
 @dataclass
@@ -270,65 +273,3 @@ class ShipmentOrderAddress:
     postal_code: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-
-@dataclass
-class ShipmentOrderStatusMapping:
-    """Junction table for WarehouseOrderStatusID array"""
-
-    id: int  # Auto-generated
-    warehouse_order_id: int
-    status_id: int
-    created_at: Optional[datetime] = None
-
-
-@dataclass
-class ShipmentOrderCarrierMapping:
-    """Junction table for CarrierID array"""
-
-    id: int  # Auto-generated
-    warehouse_order_id: int
-    carrier_id: int
-    created_at: Optional[datetime] = None
-
-
-@dataclass
-class ShipmentOrderChannelMapping:
-    """Junction table for ChannelID array"""
-
-    id: int  # Auto-generated
-    warehouse_order_id: int
-    channel_id: int
-    created_at: Optional[datetime] = None
-
-
-@dataclass
-class ShipmentOrderCustomStatusMapping:
-    """Junction table for OrderCustomStatusID array"""
-
-    id: int  # Auto-generated
-    warehouse_order_id: int
-    custom_status_id: int
-    created_at: Optional[datetime] = None
-
-
-@dataclass
-class ShipmentOrderFBAStatusMapping:
-    """Junction table for WarehouseFBAOrderStatusID array"""
-
-    id: int  # Auto-generated
-    warehouse_order_id: int
-    fba_status_id: int
-    created_at: Optional[datetime] = None
-
-
-@dataclass
-class ShipmentOrderError:
-    """Errors array from API response"""
-
-    id: int  # Auto-generated
-    warehouse_order_id: int
-    error_message: str
-    error_code: Optional[str] = None
-    error_field: Optional[str] = None
-    created_at: Optional[datetime] = None

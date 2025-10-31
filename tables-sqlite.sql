@@ -356,6 +356,11 @@ CREATE TABLE shipment_order_line (
     -- Suitability and Quarantine
     suitability_reason TEXT,
     quarantine_reason TEXT,
+
+    -- Logiwa status IDs
+    warehouse_status_id INTEGER,
+    custom_status_id INTEGER,
+    fba_status_id INTEGER,
     
     -- Metadata
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -401,107 +406,23 @@ CREATE TABLE shipment_order_address (
 CREATE INDEX idx_address_warehouse_order_id ON shipment_order_address(warehouse_order_id);
 CREATE INDEX idx_address_type ON shipment_order_address(address_type);
 
--- ============================================================================
--- JUNCTION TABLES FOR ARRAY FIELDS
--- ============================================================================
-
--- Warehouse Order Status IDs
-CREATE TABLE shipment_order_status_mapping (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    warehouse_order_id INTEGER NOT NULL,
-    status_id INTEGER NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-    
-    UNIQUE(warehouse_order_id, status_id)
-);
-
--- Indexes for shipment_order_status_mapping
-CREATE INDEX idx_status_warehouse_order_id ON shipment_order_status_mapping(warehouse_order_id);
-CREATE INDEX idx_status_id ON shipment_order_status_mapping(status_id);
-
--- Carrier IDs
-CREATE TABLE shipment_order_carrier_mapping (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    warehouse_order_id INTEGER NOT NULL,
-    carrier_id INTEGER NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-    
-    UNIQUE(warehouse_order_id, carrier_id)
-);
-
--- Indexes for shipment_order_carrier_mapping
-CREATE INDEX idx_carrier_warehouse_order_id ON shipment_order_carrier_mapping(warehouse_order_id);
-CREATE INDEX idx_carrier_id ON shipment_order_carrier_mapping(carrier_id);
-
--- Channel IDs
-CREATE TABLE shipment_order_channel_mapping (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    warehouse_order_id INTEGER NOT NULL,
-    channel_id INTEGER NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-    
-    UNIQUE(warehouse_order_id, channel_id)
-);
-
--- Indexes for shipment_order_channel_mapping
-CREATE INDEX idx_channel_warehouse_order_id ON shipment_order_channel_mapping(warehouse_order_id);
-CREATE INDEX idx_channel_id ON shipment_order_channel_mapping(channel_id);
-
--- Order Custom Status IDs
-CREATE TABLE shipment_order_custom_status_mapping (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    warehouse_order_id INTEGER NOT NULL,
-    custom_status_id INTEGER NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-    
-    UNIQUE(warehouse_order_id, custom_status_id)
-);
-
--- Indexes for shipment_order_custom_status_mapping
-CREATE INDEX idx_custom_status_warehouse_order_id ON shipment_order_custom_status_mapping(warehouse_order_id);
-CREATE INDEX idx_custom_status_id ON shipment_order_custom_status_mapping(custom_status_id);
-
--- Warehouse FBA Order Status IDs
-CREATE TABLE shipment_order_fba_status_mapping (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    warehouse_order_id INTEGER NOT NULL,
-    fba_status_id INTEGER NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-    
-    UNIQUE(warehouse_order_id, fba_status_id)
-);
-
--- Indexes for shipment_order_fba_status_mapping
-CREATE INDEX idx_fba_status_warehouse_order_id ON shipment_order_fba_status_mapping(warehouse_order_id);
-CREATE INDEX idx_fba_status_id ON shipment_order_fba_status_mapping(fba_status_id);
 
 -- ============================================================================
--- ERROR TABLE
+-- STAGING TABLE
 -- ============================================================================
-CREATE TABLE shipment_order_error (
+CREATE TABLE staging_shipment_order (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    warehouse_order_id INTEGER NOT NULL,
-    error_message TEXT NOT NULL,
-    error_code TEXT,
-    error_field TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE
+    order_id INTEGER NOT NULL,
+    raw_json TEXT NOT NULL,
+    fetch_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (order_id) REFERENCES shipment_order(id) ON DELETE CASCADE
 );
 
--- Indexes for shipment_order_error
-CREATE INDEX idx_error_warehouse_order_id ON shipment_order_error(warehouse_order_id);
-CREATE INDEX idx_error_code ON shipment_order_error(error_code);
+-- Create indexes separately in SQLite
+CREATE INDEX idx_warehouse_order_id ON staging_shipment_order(order_id);
+CREATE UNIQUE INDEX unique_order_custom_status ON staging_shipment_order(id, order_id);
+
 
 -- ============================================================================
 -- COMMENTS AND DOCUMENTATION
@@ -510,21 +431,3 @@ CREATE INDEX idx_error_code ON shipment_order_error(error_code);
 -- Table Relationships:
 -- 1. shipment_order (1) -> (Many) shipment_order_line
 -- 2. shipment_order (1) -> (Many) shipment_order_address
--- 3. shipment_order (1) -> (Many) shipment_order_status_mapping
--- 4. shipment_order (1) -> (Many) shipment_order_carrier_mapping
--- 5. shipment_order (1) -> (Many) shipment_order_channel_mapping
--- 6. shipment_order (1) -> (Many) shipment_order_custom_status_mapping
--- 7. shipment_order (1) -> (Many) shipment_order_fba_status_mapping
--- 8. shipment_order (1) -> (Many) shipment_order_error
-
--- Key Design Decisions for SQLite:
--- 1. All array fields have been normalized into junction tables
--- 2. Timestamps are stored as TEXT in ISO8601 format (YYYY-MM-DD HH:MM:SS)
--- 3. Decimal fields use REAL for floating-point precision
--- 4. Boolean fields are stored as INTEGER (0 = false, 1 = true)
--- 5. Foreign keys with CASCADE DELETE ensure referential integrity
--- 6. Indexes created separately after table definitions
--- 7. UNIQUE constraints on junction tables prevent duplicates
--- 8. BIGINT replaced with INTEGER (SQLite INTEGER can handle 64-bit values)
--- 9. VARCHAR replaced with TEXT (SQLite doesn't enforce length limits)
--- 10. AUTO_INCREMENT replaced with AUTOINCREMENT for explicit behavior

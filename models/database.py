@@ -2,11 +2,14 @@
 Database insertion module using SQLAlchemy
 """
 
-from pymssql import Error, Connection
+from sqlite3 import Error, Connection
+
+# from pymssql import Error, Connection
 from typing import Dict, Any, List
 from datetime import datetime
 from dataclasses import asdict
 from decimal import Decimal
+import logging
 
 
 def _dataclass_to_dict(obj) -> Dict[str, Any]:
@@ -33,17 +36,17 @@ def insert_order(connection: Connection, order) -> bool:
         order_dict.pop("updated_at", None)
 
         columns = ", ".join(order_dict.keys())
-        placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
-        # placeholders = ", ".join(["?"] * len(order_dict)) # sqlite3
-        query = f"INSERT IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})"  # pymssql
-        # query = f"INSERT OR IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})" # sqlite3
+        # placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
+        placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
+        # query = f"INSERT IGNORE INTO dbo.shipment_order ({columns}) VALUES ({placeholders})"  # pymssql
+        query = f"INSERT OR IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})"  # sqlite3
 
         cursor.execute(query, list(order_dict.values()))
         connection.commit()
-        print(f"Inserted order ID: {order.id}")
+        logging.debug(f"Inserted order ID: {order.id}")
         return True
     except Error as e:
-        print(f"Error inserting order: {e}")
+        logging.error(f"Error inserting order: {e}")
         connection.rollback()
         return False
     finally:
@@ -66,20 +69,20 @@ def insert_order_lines(connection: Connection, lines: List) -> bool:
             line_dict.pop("updated_at", None)
 
             columns = ", ".join(line_dict.keys())
-            placeholders = ", ".join(["%s"] * len(line_dict))  # mssql
-            # placeholders = ", ".join(["?"] * len(line_dict)) # sqlite3
+            # placeholders = ", ".join(["%s"] * len(line_dict))  # pymssql
+            placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
             query = (
-                f"INSERT IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})"  # pymssql
-                # f"INSERT OR IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})" # sqlite3
+                # f"INSERT IGNORE INTO dbo.shipment_order_line ({columns}) VALUES ({placeholders})"  # pymssql
+                f"INSERT OR IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})"  # sqlite3
             )
 
             cursor.execute(query, list(line_dict.values()))
 
         connection.commit()
-        print(f"Inserted {len(lines)} order lines")
+        logging.debug(f"Inserted {len(lines)} order lines")
         return True
     except Error as e:
-        print(f"Error inserting order lines: {e}")
+        logging.error(f"Error inserting order lines: {e}")
         connection.rollback()
         return False
     finally:
@@ -103,90 +106,18 @@ def insert_addresses(connection: Connection, addresses: List) -> bool:
             address_dict.pop("updated_at", None)
 
             columns = ", ".join(address_dict.keys())
-            placeholders = ", ".join(["%s"] * len(address_dict))  # mssql
-            # placeholders = ", ".join(["?"] * len(address_dict)) # sqlite3
-            query = f"INSERT IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})"  # pymssql
-            # query = f"INSERT OR IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})" # sqlite3
+            # placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
+            placeholders = ", ".join(["?"] * len(address_dict))  # sqlite3
+            # query = f"INSERT IGNORE INTO dbo.shipment_order_address ({columns}) VALUES ({placeholders})"  # pymssql
+            query = f"INSERT OR IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})"  # sqlite3
 
             cursor.execute(query, list(address_dict.values()))
 
         connection.commit()
-        print(f"Inserted {len(addresses)} addresses")
+        logging.debug(f"Inserted {len(addresses)} addresses")
         return True
     except Error as e:
-        print(f"Error inserting addresses: {e}")
-        connection.rollback()
-        return False
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_mappings(connection: Connection, mappings: List, table_name: str) -> bool:
-    """Insert mapping records for junction tables"""
-    if not mappings:
-        return True
-
-    cursor = None
-    try:
-        cursor = connection.cursor()
-
-        for mapping in mappings:
-            mapping_dict = _dataclass_to_dict(mapping)
-            mapping_dict.pop("id")  # Auto-generated
-            mapping_dict.pop("created_at", None)
-
-            columns = ", ".join(mapping_dict.keys())
-            placeholders = ", ".join(["%s"] * len(mapping_dict))  # mssql
-            # placeholders = ", ".join(["?"] * len(mapping_dict)) # sqlite3
-            query = (
-                f"INSERT IGNORE INTO {table_name} ({columns}) VALUES ({placeholders})"  # mysql string
-                # f"INSERT OR IGNORE INTO {table_name} ({columns}) VALUES ({placeholders})" # sqlite3 string
-            )
-
-            cursor.execute(query, list(mapping_dict.values()))
-
-        connection.commit()
-        print(f"Inserted {len(mappings)} records into {table_name}")
-        return True
-    except Error as e:
-        print(f"Error inserting mappings into {table_name}: {e}")
-        connection.rollback()
-        return False
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_errors(connection: Connection, errors: List) -> bool:
-    """Insert error records"""
-    if not errors:
-        return True
-
-    cursor = None
-    try:
-        cursor = connection.cursor()
-
-        for error in errors:
-            error_dict = _dataclass_to_dict(error)
-            error_dict.pop("id")  # Auto-generated
-            error_dict.pop("created_at", None)
-
-            columns = ", ".join(error_dict.keys())
-            placeholders = ", ".join(["%s"] * len(error_dict))  # mssql
-            # placeholders = ", ".join(["?"] * len(error_dict)) # sqlite3
-            query = (
-                f"INSERT IGNORE INTO shipment_order_error ({columns}) VALUES ({placeholders})"  # pymssql
-                # f"INSERT OR IGNORE INTO shipment_order_error ({columns}) VALUES ({placeholders})" # sqlite3
-            )
-
-            cursor.execute(query, list(error_dict.values()))
-
-        connection.commit()
-        print(f"Inserted {len(errors)} errors")
-        return True
-    except Error as e:
-        print(f"Error inserting errors: {e}")
+        logging.error(f"Error inserting addresses: {e}")
         connection.rollback()
         return False
     finally:
@@ -208,45 +139,12 @@ def insert_parsed_data(connection: Connection, parsed_data: Dict[str, Any]) -> b
         # Insert in order of dependencies
         success = True
 
-        # 1. Insert main order
         success &= insert_order(connection, parsed_data["order"])
-
-        # 2. Insert order lines
         success &= insert_order_lines(connection, parsed_data["lines"])
-
-        # 3. Insert addresses
         success &= insert_addresses(connection, parsed_data["addresses"])
-
-        # 4. Insert all mappings
-        success &= insert_mappings(
-            connection, parsed_data["status_mappings"], "shipment_order_status_mapping"
-        )
-        success &= insert_mappings(
-            connection,
-            parsed_data["carrier_mappings"],
-            "shipment_order_carrier_mapping",
-        )
-        success &= insert_mappings(
-            connection,
-            parsed_data["channel_mappings"],
-            "shipment_order_channel_mapping",
-        )
-        success &= insert_mappings(
-            connection,
-            parsed_data["custom_status_mappings"],
-            "shipment_order_custom_status_mapping",
-        )
-        success &= insert_mappings(
-            connection,
-            parsed_data["fba_status_mappings"],
-            "shipment_order_fba_status_mapping",
-        )
-
-        # 5. Insert errors
-        success &= insert_errors(connection, parsed_data["errors"])
 
         return success
 
     except Exception as e:
-        print(f"Error in insert_parsed_data: {e}")
+        logging.error(f"Error in insert_parsed_data: {e}")
         return False
