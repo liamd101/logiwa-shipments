@@ -5,7 +5,7 @@
 -- ============================================================================
 -- MAIN ORDER TABLE
 -- ============================================================================
-CREATE TABLE shipment_order (
+CREATE TABLE ShipmentOrder (
     id INTEGER PRIMARY KEY,
     code TEXT NOT NULL,
     priority_id TEXT,
@@ -268,17 +268,17 @@ CREATE TABLE shipment_order (
 );
 
 -- Indexes for shipment_order
-CREATE INDEX idx_code ON shipment_order(code);
-CREATE INDEX idx_customer_id ON shipment_order(customer_id);
-CREATE INDEX idx_warehouse_id ON shipment_order(warehouse_id);
-CREATE INDEX idx_order_date ON shipment_order(order_date);
-CREATE INDEX idx_status_code ON shipment_order(warehouse_order_status_code);
-CREATE INDEX idx_last_modified ON shipment_order(last_modified_date);
+CREATE INDEX idx_code ON ShipmentOrder(code);
+CREATE INDEX idx_customer_id ON ShipmentOrder(customer_id);
+CREATE INDEX idx_warehouse_id ON ShipmentOrder(warehouse_id);
+CREATE INDEX idx_order_date ON ShipmentOrder(order_date);
+CREATE INDEX idx_status_code ON ShipmentOrder(warehouse_order_status_code);
+CREATE INDEX idx_last_modified ON ShipmentOrder(last_modified_date);
 
 -- ============================================================================
 -- ORDER LINE ITEMS TABLE
 -- ============================================================================
-CREATE TABLE shipment_order_line (
+CREATE TABLE ShipmentOrder_Line (
     id INTEGER PRIMARY KEY,
     code TEXT NOT NULL,
     warehouse_order_id INTEGER NOT NULL,
@@ -366,19 +366,19 @@ CREATE TABLE shipment_order_line (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE
+    FOREIGN KEY (warehouse_order_id) REFERENCES ShipmentOrder(id) ON DELETE CASCADE
 );
 
 -- Indexes for shipment_order_line
-CREATE INDEX idx_line_warehouse_order_id ON shipment_order_line(warehouse_order_id);
-CREATE INDEX idx_line_inventory_item_id ON shipment_order_line(inventory_item_id);
-CREATE INDEX idx_line_barcode ON shipment_order_line(barcode);
-CREATE INDEX idx_line_code ON shipment_order_line(code);
+CREATE INDEX idx_line_warehouse_order_id ON ShipmentOrder_Line(warehouse_order_id);
+CREATE INDEX idx_line_inventory_item_id ON ShipmentOrder_Line(inventory_item_id);
+CREATE INDEX idx_line_barcode ON ShipmentOrder_Line(barcode);
+CREATE INDEX idx_line_code ON ShipmentOrder_Line(code);
 
 -- ============================================================================
 -- ADDRESS TABLE
 -- ============================================================================
-CREATE TABLE shipment_order_address (
+CREATE TABLE ShipmentOrder_Address (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     warehouse_order_id INTEGER NOT NULL,
     address_type TEXT NOT NULL, -- 'SHIPPING', 'BILLING', 'THIRD_PARTY'
@@ -399,29 +399,36 @@ CREATE TABLE shipment_order_address (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE
+    FOREIGN KEY (warehouse_order_id) REFERENCES ShipmentOrder(id) ON DELETE CASCADE
 );
 
 -- Indexes for shipment_order_address
-CREATE INDEX idx_address_warehouse_order_id ON shipment_order_address(warehouse_order_id);
-CREATE INDEX idx_address_type ON shipment_order_address(address_type);
+CREATE INDEX idx_address_warehouse_order_id ON ShipmentOrder_Address(warehouse_order_id);
+CREATE INDEX idx_address_type ON ShipmentOrder_Address(address_type);
+
+
+CREATE TABLE ShipmentOrder_Runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fetched_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    success INTEGER
+);
 
 
 -- ============================================================================
 -- STAGING TABLE
 -- ============================================================================
-CREATE TABLE staging_shipment_order (
+CREATE TABLE ShipmentOrder_Staging (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
     raw_json TEXT NOT NULL,
     fetch_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (order_id) REFERENCES shipment_order(id) ON DELETE CASCADE
+    FOREIGN KEY (order_id) REFERENCES ShipmentOrder(id) ON DELETE CASCADE
 );
 
 -- Create indexes separately in SQLite
-CREATE INDEX idx_warehouse_order_id ON staging_shipment_order(order_id);
-CREATE UNIQUE INDEX unique_order_custom_status ON staging_shipment_order(id, order_id);
+CREATE INDEX idx_warehouse_order_id ON ShipmentOrder_Staging(order_id);
+CREATE UNIQUE INDEX unique_order_custom_status ON ShipmentOrder_Staging(id, order_id);
 
 
 -- ============================================================================

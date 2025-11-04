@@ -497,6 +497,12 @@ CREATE TABLE shipment_order_error (
     INDEX idx_error_code (error_code)
 );
 
+create table ShipmentOrder_Runs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    fetched_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    success BOOLEAN
+);
+
 -- ============================================================================
 -- STAGING TABLE
 -- ============================================================================
@@ -520,18 +526,3 @@ CREATE TABLE staging_shipment_order (
 -- Table Relationships:
 -- 1. shipment_order (1) -> (Many) shipment_order_line
 -- 2. shipment_order (1) -> (Many) shipment_order_address
--- 3. shipment_order (1) -> (Many) shipment_order_status_mapping
--- 4. shipment_order (1) -> (Many) shipment_order_carrier_mapping
--- 5. shipment_order (1) -> (Many) shipment_order_channel_mapping
--- 6. shipment_order (1) -> (Many) shipment_order_custom_status_mapping
--- 7. shipment_order (1) -> (Many) shipment_order_fba_status_mapping
--- 8. shipment_order (1) -> (Many) shipment_order_error
-
--- Key Design Decisions:
--- 1. All array fields have been normalized into junction tables
--- 2. Timestamps are stored in database's native TIMESTAMP type
--- 3. Decimal fields use DECIMAL(18,8) for precision
--- 4. Boolean fields are stored as BOOLEAN (TINYINT(1) in MySQL)
--- 5. Foreign keys with CASCADE DELETE ensure referential integrity
--- 6. Indexes added on commonly queried fields
--- 7. UNIQUE constraints on junction tables prevent duplicates
