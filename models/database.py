@@ -169,11 +169,14 @@ def insert_parsed_data(connection: Connection, parsed_data: Dict[str, Any]) -> b
         return False
 
 
-def last_fetched_date(conn: Connection) -> Optional[str]:
+def last_fetched_date(conn: Connection) -> Optional[datetime]:
     """Checks for the most recent time that the script ran successfully. If has not ran successfully, returns None"""
     # select_query = "SELECT MAX(fetched_date) FROM dbo.ShipmentOrder_Runs WHERE success = 1" # pymssql
     cursor = conn.cursor()
     select_query = "SELECT MAX(fetch_timestamp) FROM ShipmentOrder_Runs WHERE success = 1"  # sqlite3
     cursor.execute(select_query)
     result = cursor.fetchone()
-    return result[0] if result and result[0] is not None else None
+    if result and result[0] is not None:
+        return datetime.fromisoformat(result[0])
+    else:
+        return None

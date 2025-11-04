@@ -88,7 +88,7 @@ def main() -> int:
         # ) # pymssql
         conn.cursor().execute(
             "INSERT INTO ShipmentOrder_Runs (fetch_timestamp, success) VALUES (?, ?)",
-            (start_time.strftime("%m.%d.%Y %H:%M:%S"), success),
+            (start_time.isoformat(), success),
         )  # sqlite3
         conn.commit()
         conn.close()

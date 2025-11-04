@@ -2,7 +2,7 @@ import os
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 import json
-from logging import debug, error, info
+from logging import debug, error
 import requests
 import time
 
@@ -70,7 +70,7 @@ def fetch_page(
     window: timedelta,
     headers: Dict[str, str],
     url: str,
-    last_modified_date: Optional[str],
+    last_modified_date: Optional[datetime],
 ) -> Optional[List[Dict[str, Any]]]:
     """Fetch a single page of data"""
     params = {
@@ -83,7 +83,9 @@ def fetch_page(
         "SelectedPageIndex": page_index,
     }
     if last_modified_date:
-        params["LastModifiedDate_Start"] = last_modified_date
+        params["LastModifiedDate_Start"] = last_modified_date.strftime(
+            "%m.%d.%Y %H:%M:%S"
+        )
 
     response = requests.post(url, json=params, headers=headers)
     if response.status_code == 403:
@@ -111,7 +113,7 @@ def fetch_warehouse_pages(
     window: timedelta,
     headers: Dict[str, str],
     url: str,
-    last_modified_date: Optional[str],
+    last_modified_date: Optional[datetime],
 ):
     """Fetch all pages for a single warehouse"""
     debug(f"Processing shipments out of warehouse {warehouse}")
@@ -152,7 +154,14 @@ def fetch_warehouse_pages(
             fetch_timestamp = datetime.now()
 
             cur.execute(delete_query, (order_id,))
-            cur.execute(insert_query, (order_id, raw_json, fetch_timestamp,))
+            cur.execute(
+                insert_query,
+                (
+                    order_id,
+                    raw_json,
+                    fetch_timestamp,
+                ),
+            )
 
         page_index += 1
 
@@ -164,19 +173,6 @@ def fetch_warehouse_pages(
 # modified_date = 10/22
 # dbo.ShipmentOrder_Retrievals (datetime)
 # store the datetime of the most recent successful run
-
-
-def get_most_recent_modified_date(conn: Connection) -> Optional[str]:
-    cursor = conn.cursor()
-    # cursor.execute(
-    #     "SELECT MAX(last_modified_date) FROM dbo.ShipmentOrder_CompletedRuns"
-    # ) # pymssql
-    cursor.execute(
-        "SELECT MAX(last_modified_date) FROM ShipmentOrder_CompletedRuns"
-    )  # sqlite3
-    result = cursor.fetchone()
-    return result[0] if result and result[0] is not None else None
-
 
 def get_shipments(conn: Connection) -> bool:
     """
