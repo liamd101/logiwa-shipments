@@ -409,7 +409,7 @@ CREATE INDEX idx_address_type ON ShipmentOrder_Address(address_type);
 
 CREATE TABLE ShipmentOrder_Runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fetched_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fetch_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     success INTEGER
 );
 
