@@ -39,7 +39,9 @@ def insert_order(connection: Connection, order) -> bool:
 
         placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
         query = f"""INSERT INTO dbo.ShipmentOrder ({columns}) VALUES ({placeholders})"""  # pymssql
-        cursor.execute("DELETE FROM dbo.ShipmentOrder WHERE id = %s", (order.id,)) # pymssql
+        cursor.execute(
+            "DELETE FROM dbo.ShipmentOrder WHERE id = %s", (order.id,)
+        )  # pymssql
 
         # placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
         # query = f"INSERT OR IGNORE INTO ShipmentOrder ({columns}) VALUES ({placeholders})"  # sqlite3
@@ -128,7 +130,9 @@ def clean_staging_table(connection: Connection, id: int) -> bool:
     cursor = connection.cursor()
 
     try:
-        cursor.execute("DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s", (id,)) # pymssql
+        cursor.execute(
+            "DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s", (id,)
+        )  # pymssql
         # cursor.execute("DELETE FROM ShipmentOrder_Staging WHERE order_id = ?", (id,)) # sqlite3
         connection.commit()
         return True
@@ -171,7 +175,7 @@ def insert_parsed_data(connection: Connection, parsed_data: Dict[str, Any]) -> b
 
 def last_fetched_date(conn: Connection) -> Optional[datetime]:
     """Checks for the most recent time that the script ran successfully. If has not ran successfully, returns None"""
-    select_query = "SELECT MAX(fetched_date) FROM dbo.ShipmentOrder_Runs WHERE success = 1" # pymssql
+    select_query = "SELECT MAX(fetched_date) FROM dbo.ShipmentOrder_Runs WHERE success = 1"  # pymssql
     # select_query = "SELECT MAX(fetch_timestamp) FROM ShipmentOrder_Runs WHERE success = 1"  # sqlite3
     cursor = conn.cursor()
     cursor.execute(select_query)
