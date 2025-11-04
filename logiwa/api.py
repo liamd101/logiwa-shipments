@@ -119,24 +119,22 @@ def fetch_warehouse_pages(
     debug(f"Processing shipments out of warehouse {warehouse}")
     page_index = 1
 
-    # delete_query = (
-    #     "DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s"  # pymssql
-    # )
-    # insert_query = """
-    # INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
-    # SELECT (%s, %s, %s)
-    # """  # pymssql
-
-    delete_query = "DELETE FROM ShipmentOrder_Staging WHERE order_id = ?"  # sqlite3
+    delete_query = (
+        "DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s"  # pymssql
+    )
     insert_query = """
-    INSERT INTO ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
-    VALUES (?, ?, ?)
-    """  # sqlite3
+    INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
+    VALUES (%s, %s, %s)
+    """  # pymssql
+
+    # delete_query = "DELETE FROM ShipmentOrder_Staging WHERE order_id = ?"  # sqlite3
+    # insert_query = """
+    # INSERT INTO ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
+    # VALUES (?, ?, ?)
+    # """  # sqlite3
 
     cur = conn.cursor()
     while True:
-        if page_index > 1:
-            break
         orders = fetch_page(
             warehouse,
             page_index,
@@ -173,6 +171,7 @@ def fetch_warehouse_pages(
 # modified_date = 10/22
 # dbo.ShipmentOrder_Retrievals (datetime)
 # store the datetime of the most recent successful run
+
 
 def get_shipments(conn: Connection) -> bool:
     """

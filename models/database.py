@@ -2,8 +2,8 @@
 Database insertion module using SQLAlchemy
 """
 
-from sqlite3 import Error, Connection
-# from pymssql import Error, Connection
+# from sqlite3 import Error, Connection
+from pymssql import Error, Connection
 
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -37,13 +37,13 @@ def insert_order(connection: Connection, order) -> bool:
 
         columns = ", ".join(order_dict.keys())
 
-        # placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
-        # query = f"""INSERT INTO dbo.ShipmentOrder ({columns}) VALUES ({placeholders})"""  # pymssql
-        # cursor.execute("DELETE FROM dbo.ShipmentOrder WHERE id = %s", (order.id,)) # pymssql
+        placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
+        query = f"""INSERT INTO dbo.ShipmentOrder ({columns}) VALUES ({placeholders})"""  # pymssql
+        cursor.execute("DELETE FROM dbo.ShipmentOrder WHERE id = %s", (order.id,)) # pymssql
 
-        placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
-        query = f"INSERT OR IGNORE INTO ShipmentOrder ({columns}) VALUES ({placeholders})"  # sqlite3
-        cursor.execute("DELETE FROM ShipmentOrder WHERE id = ?", (order.id,))  # sqlite3
+        # placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
+        # query = f"INSERT OR IGNORE INTO ShipmentOrder ({columns}) VALUES ({placeholders})"  # sqlite3
+        # cursor.execute("DELETE FROM ShipmentOrder WHERE id = ?", (order.id,))  # sqlite3
 
         cursor.execute(query, list(order_dict.values()))
         connection.commit()
@@ -72,10 +72,10 @@ def insert_order_lines(connection: Connection, lines: List) -> bool:
             line_dict.pop("updated_at", None)
 
             columns = ", ".join(line_dict.keys())
-            # placeholders = ", ".join(["%s"] * len(line_dict))  # pymssql
-            # query = f"INSERT INTO dbo.ShipmentOrder_Line ({columns}) VALUES ({placeholders})"  # pymssql
-            placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
-            query = f"INSERT OR IGNORE INTO ShipmentOrder_Line ({columns}) VALUES ({placeholders})"  # sqlite3
+            placeholders = ", ".join(["%s"] * len(line_dict))  # pymssql
+            query = f"INSERT INTO dbo.ShipmentOrder_Line ({columns}) VALUES ({placeholders})"  # pymssql
+            # placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
+            # query = f"INSERT OR IGNORE INTO ShipmentOrder_Line ({columns}) VALUES ({placeholders})"  # sqlite3
 
             cursor.execute(query, list(line_dict.values()))
 
@@ -106,10 +106,10 @@ def insert_addresses(connection: Connection, addresses: List) -> bool:
             address_dict.pop("updated_at", None)
 
             columns = ", ".join(address_dict.keys())
-            # placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
-            # query = f"INSERT INTO dbo.ShipmentOrder_Address ({columns}) VALUES ({placeholders})"  # pymssql
-            placeholders = ", ".join(["?"] * len(address_dict))  # sqlite3
-            query = f"INSERT OR IGNORE INTO ShipmentOrder_Address ({columns}) VALUES ({placeholders})"  # sqlite3
+            placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
+            query = f"INSERT INTO dbo.ShipmentOrder_Address ({columns}) VALUES ({placeholders})"  # pymssql
+            # placeholders = ", ".join(["?"] * len(address_dict))  # sqlite3
+            # query = f"INSERT OR IGNORE INTO ShipmentOrder_Address ({columns}) VALUES ({placeholders})"  # sqlite3
 
             cursor.execute(query, list(address_dict.values()))
 
@@ -128,8 +128,8 @@ def clean_staging_table(connection: Connection, id: int) -> bool:
     cursor = connection.cursor()
 
     try:
-        # cursor.execute("DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s", (id,)) # pymssql
-        cursor.execute("DELETE FROM ShipmentOrder_Staging WHERE order_id = ?", (id,))
+        cursor.execute("DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s", (id,)) # pymssql
+        # cursor.execute("DELETE FROM ShipmentOrder_Staging WHERE order_id = ?", (id,)) # sqlite3
         connection.commit()
         return True
     except Error as e:
@@ -171,9 +171,9 @@ def insert_parsed_data(connection: Connection, parsed_data: Dict[str, Any]) -> b
 
 def last_fetched_date(conn: Connection) -> Optional[datetime]:
     """Checks for the most recent time that the script ran successfully. If has not ran successfully, returns None"""
-    # select_query = "SELECT MAX(fetched_date) FROM dbo.ShipmentOrder_Runs WHERE success = 1" # pymssql
+    select_query = "SELECT MAX(fetched_date) FROM dbo.ShipmentOrder_Runs WHERE success = 1" # pymssql
+    # select_query = "SELECT MAX(fetch_timestamp) FROM ShipmentOrder_Runs WHERE success = 1"  # sqlite3
     cursor = conn.cursor()
-    select_query = "SELECT MAX(fetch_timestamp) FROM ShipmentOrder_Runs WHERE success = 1"  # sqlite3
     cursor.execute(select_query)
     result = cursor.fetchone()
     if result and result[0] is not None:

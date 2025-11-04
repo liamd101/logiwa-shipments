@@ -1,11 +1,10 @@
 import os
 import sys
-from typing import List, Dict, Any, Optional
 
-# import pymssql
-# from pymssql import Connection
-import sqlite3
-from sqlite3 import Connection
+import pymssql
+from pymssql import Connection
+# import sqlite3
+# from sqlite3 import Connection
 
 from dotenv import load_dotenv
 import logging
@@ -14,16 +13,6 @@ import datetime
 from models.database import insert_parsed_data
 from models.parsing import WarehouseOrderParser
 from logiwa.api import get_api_token, get_shipments
-
-
-def save_shipments_to_sql(conn: Connection, shipments: List[Dict[str, Any]]):
-    for shipment in shipments:
-        if not insert_parsed_data(connection=conn, parsed_data=shipment):
-            logging.error("failed to insert shipment")
-
-    logging.info(f"Saved {len(shipments)} shipments to SQL.")
-
-    return
 
 
 def process_shipments(conn: Connection) -> bool:
@@ -50,14 +39,14 @@ def main() -> int:
     start_time = datetime.datetime.now()
     success = False
 
-    # conn = pymssql.connect(
-    #     server=os.getenv("SQL_SERVER_NAME"),
-    #     user=os.getenv("SQL_USER_NAME"),
-    #     password=os.getenv("SQL_PASSWORD"),
-    #     database=os.getenv("SQL_DATABASE_NAME"),
-    # )
+    conn = pymssql.connect(
+        server=os.getenv("SQL_SERVER_NAME"),
+        user=os.getenv("SQL_USER_NAME"),
+        password=os.getenv("SQL_PASSWORD"),
+        database=os.getenv("SQL_DATABASE_NAME"),
+    )
 
-    conn = sqlite3.connect("shipments.db")
+    # conn = sqlite3.connect("shipments.db")
 
     try:
         if get_api_token():
@@ -82,14 +71,14 @@ def main() -> int:
         logging.error(f"main: {e}")
         return -1
     finally:
-        # conn.cursor().execute(
-        #     "INSERT INTO dbo.ShipmentOrder_Runs (fetch_timestamp, success) SELECT (%s, %s)",
-        #     (start_time, success),
-        # ) # pymssql
         conn.cursor().execute(
-            "INSERT INTO ShipmentOrder_Runs (fetch_timestamp, success) VALUES (?, ?)",
-            (start_time.isoformat(), success),
-        )  # sqlite3
+            "INSERT INTO dbo.ShipmentOrder_Runs (fetch_timestamp, success) VALUES (%s, %s)",
+            (start_time, success),
+        )  # pymssql
+        # conn.cursor().execute(
+        #     "INSERT INTO ShipmentOrder_Runs (fetch_timestamp, success) VALUES (?, ?)",
+        #     (start_time.isoformat(), success),
+        # )  # sqlite3
         conn.commit()
         conn.close()
 
