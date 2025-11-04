@@ -2,10 +2,10 @@
 Database insertion module using SQLAlchemy
 """
 
-# from sqlite3 import Error, Connection
+from sqlite3 import Error, Connection
+# from pymssql import Error, Connection
 
-from pymssql import Error, Connection
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 from dataclasses import asdict
 from decimal import Decimal
@@ -37,17 +37,16 @@ def insert_order(connection: Connection, order) -> bool:
 
         columns = ", ".join(order_dict.keys())
 
-        placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
-        query = f"INSERT IGNORE INTO dbo.ShipmentOrder ({columns}) VALUES ({placeholders})"  # pymssql
-        cursor.execute("DELETE FROM dbo.ShipmentOrder WHERE id = %s", order.id) # pymssql
+        # placeholders = ", ".join(["%s"] * len(order_dict))  # pymssql
+        # query = f"""INSERT INTO dbo.ShipmentOrder ({columns}) VALUES ({placeholders})"""  # pymssql
+        # cursor.execute("DELETE FROM dbo.ShipmentOrder WHERE id = %s", (order.id,)) # pymssql
 
-        # placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
-        # query = f"INSERT OR IGNORE INTO shipment_order ({columns}) VALUES ({placeholders})"  # sqlite3
-        # cursor.execute("DELETE FROM shipment_order WHERE id = ?", order.id) # sqlite3
+        placeholders = ", ".join(["?"] * len(order_dict))  # sqlite3
+        query = f"INSERT OR IGNORE INTO ShipmentOrder ({columns}) VALUES ({placeholders})"  # sqlite3
+        cursor.execute("DELETE FROM ShipmentOrder WHERE id = ?", (order.id,))  # sqlite3
 
         cursor.execute(query, list(order_dict.values()))
         connection.commit()
-        logging.debug(f"Inserted order ID: {order.id}")
         return True
     except Error as e:
         logging.error(f"Error inserting order: {e}")
@@ -73,15 +72,14 @@ def insert_order_lines(connection: Connection, lines: List) -> bool:
             line_dict.pop("updated_at", None)
 
             columns = ", ".join(line_dict.keys())
-            placeholders = ", ".join(["%s"] * len(line_dict))  # pymssql
-            query = f"INSERT IGNORE INTO dbo.ShipmentOrder_Line ({columns}) VALUES ({placeholders})"  # pymssql
-            # placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
-            # query = f"INSERT OR IGNORE INTO shipment_order_line ({columns}) VALUES ({placeholders})"  # sqlite3
+            # placeholders = ", ".join(["%s"] * len(line_dict))  # pymssql
+            # query = f"INSERT INTO dbo.ShipmentOrder_Line ({columns}) VALUES ({placeholders})"  # pymssql
+            placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
+            query = f"INSERT OR IGNORE INTO ShipmentOrder_Line ({columns}) VALUES ({placeholders})"  # sqlite3
 
             cursor.execute(query, list(line_dict.values()))
 
         connection.commit()
-        logging.debug(f"Inserted {len(lines)} order lines")
         return True
     except Error as e:
         logging.error(f"Error inserting order lines: {e}")
@@ -108,15 +106,14 @@ def insert_addresses(connection: Connection, addresses: List) -> bool:
             address_dict.pop("updated_at", None)
 
             columns = ", ".join(address_dict.keys())
-            placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
-            query = f"INSERT IGNORE INTO dbo.ShipmentOrder_Address ({columns}) VALUES ({placeholders})"  # pymssql
-            # placeholders = ", ".join(["?"] * len(address_dict))  # sqlite3
-            # query = f"INSERT OR IGNORE INTO shipment_order_address ({columns}) VALUES ({placeholders})"  # sqlite3
+            # placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
+            # query = f"INSERT INTO dbo.ShipmentOrder_Address ({columns}) VALUES ({placeholders})"  # pymssql
+            placeholders = ", ".join(["?"] * len(address_dict))  # sqlite3
+            query = f"INSERT OR IGNORE INTO ShipmentOrder_Address ({columns}) VALUES ({placeholders})"  # sqlite3
 
             cursor.execute(query, list(address_dict.values()))
 
         connection.commit()
-        logging.debug(f"Inserted {len(addresses)} addresses")
         return True
     except Error as e:
         logging.error(f"Error inserting addresses: {e}")
@@ -131,7 +128,8 @@ def clean_staging_table(connection: Connection, id: int) -> bool:
     cursor = connection.cursor()
 
     try:
-        cursor.execute("DELETE FROM staging_shipment_order WHERE order_id = ?", (id,))
+        # cursor.execute("DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s", (id,)) # pymssql
+        cursor.execute("DELETE FROM ShipmentOrder_Staging WHERE order_id = ?", (id,))
         connection.commit()
         return True
     except Error as e:
@@ -169,3 +167,13 @@ def insert_parsed_data(connection: Connection, parsed_data: Dict[str, Any]) -> b
     except Exception as e:
         logging.error(f"Error in insert_parsed_data: {e}")
         return False
+
+
+def last_fetched_date(conn: Connection) -> Optional[str]:
+    """Checks for the most recent time that the script ran successfully. If has not ran successfully, returns None"""
+    # select_query = "SELECT MAX(fetched_date) FROM dbo.ShipmentOrder_Runs WHERE success = 1" # pymssql
+    cursor = conn.cursor()
+    select_query = "SELECT MAX(fetch_timestamp) FROM ShipmentOrder_Runs WHERE success = 1"  # sqlite3
+    cursor.execute(select_query)
+    result = cursor.fetchone()
+    return result[0] if result and result[0] is not None else None

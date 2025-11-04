@@ -2,14 +2,14 @@ import os
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 import json
-from logging import debug, info, error
+from logging import debug, error, info
 import requests
 import time
 
 from pymssql import Connection
 # from sqlite3 import Connection
 
-from models.parsing import WarehouseOrderParser
+from models.database import last_fetched_date
 
 
 API_TOKEN: Optional[str] = None
@@ -83,13 +83,12 @@ def fetch_page(
         "SelectedPageIndex": page_index,
     }
     if last_modified_date:
-        params["LastModifiedDate_Start"] = datetime.strptime(
-            last_modified_date, "%Y-%m-%d %H:%M:%S"
-        ).strftime("%m.%d.%Y %H:%M:%S")
+        params["LastModifiedDate_Start"] = last_modified_date
 
     response = requests.post(url, json=params, headers=headers)
     if response.status_code == 403:
         time.sleep(2)
+        # recursively call it incase it continues to fail
         return fetch_page(
             warehouse,
             page_index,
@@ -116,21 +115,27 @@ def fetch_warehouse_pages(
 ):
     """Fetch all pages for a single warehouse"""
     debug(f"Processing shipments out of warehouse {warehouse}")
-    all_orders = []
     page_index = 1
 
+    # delete_query = (
+    #     "DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s"  # pymssql
+    # )
     # insert_query = """
-    # INSERT INTO staging_shipment_order (order_id, raw_json, fetch_timestamp)
-    # VALUES (?, ?, ?)
-    # """  # sqlite3
+    # INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
+    # SELECT (%s, %s, %s)
+    # """  # pymssql
+
+    delete_query = "DELETE FROM ShipmentOrder_Staging WHERE order_id = ?"  # sqlite3
     insert_query = """
-    INSERT INTO dbo.ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
-    VALUES (%s, %s, %s)
-    """  # pymssql
+    INSERT INTO ShipmentOrder_Staging (order_id, raw_json, fetch_timestamp)
+    VALUES (?, ?, ?)
+    """  # sqlite3
 
     cur = conn.cursor()
     while True:
-        data = fetch_page(
+        if page_index > 1:
+            break
+        orders = fetch_page(
             warehouse,
             page_index,
             window,
@@ -138,38 +143,51 @@ def fetch_warehouse_pages(
             url,
             last_modified_date,
         )
-        if data is None:
+        if orders is None:
             break
 
-        for order_data in data:
-            order_id = order_data.get("ID")
-            raw_json = json.dumps(order_data)
+        for order in orders:
+            order_id = order.get("ID")
+            raw_json = json.dumps(order)
             fetch_timestamp = datetime.now()
 
-            cur.execute(insert_query, (order_id, raw_json, fetch_timestamp))
+            cur.execute(delete_query, (order_id,))
+            cur.execute(insert_query, (order_id, raw_json, fetch_timestamp,))
 
-        all_orders.extend(data)
         page_index += 1
 
     conn.commit()
-    conn.close()
+
+
+# create new table with
+# order_date   = 10/21
+# modified_date = 10/22
+# dbo.ShipmentOrder_Retrievals (datetime)
+# store the datetime of the most recent successful run
 
 
 def get_most_recent_modified_date(conn: Connection) -> Optional[str]:
     cursor = conn.cursor()
-    cursor.execute("SELECT MAX(last_modified_date) FROM shipment_order")
+    # cursor.execute(
+    #     "SELECT MAX(last_modified_date) FROM dbo.ShipmentOrder_CompletedRuns"
+    # ) # pymssql
+    cursor.execute(
+        "SELECT MAX(last_modified_date) FROM ShipmentOrder_CompletedRuns"
+    )  # sqlite3
     result = cursor.fetchone()
     return result[0] if result and result[0] is not None else None
 
 
-def get_shipments(conn: Connection):
+def get_shipments(conn: Connection) -> bool:
     """
-    Queries the Logiwa API synchronously and returns a List of ShipmentInfo
+    Queries the Logiwa API synchronously and returns a boolean indicating Success (True) or failure (False)
     Shipments are only queried within the past or next 45 days
+
+    Shipments are stored in a staging table for future access
     """
     warehouses = get_warehouses()
     if not warehouses:
-        return None
+        return False
 
     url = "https://hubapi.logiwa.com/en/api/IntegrationApi/WarehouseOrderSearch"
     headers = {
@@ -178,7 +196,7 @@ def get_shipments(conn: Connection):
     }
 
     window = timedelta(days=45)
-    last_modified_date_stored = get_most_recent_modified_date(conn)
+    last_modified_date_stored = last_fetched_date(conn)
 
     # Fetch all warehouses sequentially
     for warehouse in warehouses:
@@ -190,3 +208,5 @@ def get_shipments(conn: Connection):
             url,
             last_modified_date_stored,
         )
+
+    return True
