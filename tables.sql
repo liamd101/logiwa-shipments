@@ -1,312 +1,313 @@
 -- SQL Table Definitions for Warehouse Order System
 -- Normalized schema to avoid arrays in columns
+-- Microsoft SQL Server 2019 (Version 15) Compatible Version
 
 -- ============================================================================
 -- MAIN ORDER TABLE
 -- ============================================================================
-CREATE TABLE shipment_order (
-    id BIGINT PRIMARY KEY,
-    code VARCHAR(255) NOT NULL,
-    priority_id VARCHAR(50),
-    customer_ref_code VARCHAR(255),
-    depositor_ref_code VARCHAR(255),
-    customer_order_no VARCHAR(255),
-    depositor_order_no VARCHAR(255),
-    warehouse_order_status_code VARCHAR(100),
-
+CREATE TABLE dbo.ShipmentOrder (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    code NVARCHAR(MAX) NOT NULL,
+    priority_id NVARCHAR(MAX),
+    customer_ref_code NVARCHAR(MAX),
+    depositor_ref_code NVARCHAR(MAX),
+    customer_order_no NVARCHAR(MAX),
+    depositor_order_no NVARCHAR(MAX),
+    warehouse_order_status_code NVARCHAR(MAX),
+    
     -- Customer Information
-    customer_id BIGINT,
-    customer_code VARCHAR(100),
-    customer_description VARCHAR(500),
-
+    customer_id INT,
+    customer_code NVARCHAR(MAX),
+    customer_description NVARCHAR(MAX),
+    
     -- Site and Warehouse Information
-    inventory_site_id BIGINT,
-    inventory_site_code VARCHAR(100),
-    warehouse_id BIGINT,
-    warehouse_code VARCHAR(100),
-    warehouse_description VARCHAR(500),
-
+    inventory_site_id INT,
+    inventory_site_code NVARCHAR(MAX),
+    warehouse_id INT,
+    warehouse_code NVARCHAR(MAX),
+    warehouse_description NVARCHAR(MAX),
+    
     -- Depositor Information
-    depositor_id BIGINT,
-    depositor_code VARCHAR(100),
-    depositor_description VARCHAR(500),
-
+    depositor_id INT,
+    depositor_code NVARCHAR(MAX),
+    depositor_description NVARCHAR(MAX),
+    
     -- Printing Preferences
-    is_print_carrier_label_pack_list_as_label BOOLEAN,
-    is_print_carrier_label_pack_list_on_same_page BOOLEAN,
-
+    is_print_carrier_label_pack_list_as_label BIT,
+    is_print_carrier_label_pack_list_on_same_page BIT,
+    
     -- Carrier Information
-    carrier_tracking_number VARCHAR(255),
-    carrier_description VARCHAR(500),
-    carrier_shipping_options_id BIGINT,
-    carrier_depositor_list_id BIGINT,
-    carrier_rate DECIMAL(18, 8),
-    carrier_markup_rate DECIMAL(18, 8),
-    carrier_package_type_id BIGINT,
-    carrier_weight VARCHAR(50),
-    carrier_billing_type_id BIGINT,
-    carrier_billing_type_description VARCHAR(255),
-    carrier_shipping_description VARCHAR(500),
-
+    carrier_tracking_number NVARCHAR(MAX),
+    carrier_description NVARCHAR(MAX),
+    carrier_shipping_options_id INT,
+    carrier_depositor_list_id INT,
+    carrier_rate DECIMAL(18,2),
+    carrier_markup_rate DECIMAL(18,2),
+    carrier_package_type_id INT,
+    carrier_weight NVARCHAR(MAX),
+    carrier_billing_type_id INT,
+    carrier_billing_type_description NVARCHAR(MAX),
+    carrier_shipping_description NVARCHAR(MAX),
+    
     -- Order Type
-    warehouse_order_type_id BIGINT,
-    warehouse_order_type_code VARCHAR(100),
-    is_amazon_fba BOOLEAN,
-
+    warehouse_order_type_id INT,
+    warehouse_order_type_code NVARCHAR(MAX),
+    is_amazon_fba BIT,
+    
     -- Dates
-    order_date TIMESTAMP,
-    planned_delivery_date TIMESTAMP,
-    planned_ship_date TIMESTAMP,
-    planned_pick_date TIMESTAMP,
-    actual_pick_date TIMESTAMP,
-    actual_delivery_date TIMESTAMP,
-    actual_ship_date TIMESTAMP,
-    planned_pickup_date TIMESTAMP,
-    invoice_date TIMESTAMP,
-    entry_date_time TIMESTAMP,
-    last_modified_date TIMESTAMP,
-    cancellation_date TIMESTAMP,
-    receipt_date TIMESTAMP,
-    earliest_ship_date TIMESTAMP,
-    latest_ship_date TIMESTAMP,
-    earliest_delivery_date TIMESTAMP,
-    latest_delivery_date TIMESTAMP,
-
+    order_date DATETIME2,
+    planned_delivery_date DATETIME2,
+    planned_ship_date DATETIME2,
+    planned_pick_date DATETIME2,
+    actual_pick_date DATETIME2,
+    actual_delivery_date DATETIME2,
+    actual_ship_date DATETIME2,
+    planned_pickup_date DATETIME2,
+    invoice_date DATETIME2,
+    entry_date_time DATETIME2,
+    last_modified_date DATETIME2,
+    cancellation_date DATETIME2,
+    receipt_date DATETIME2,
+    earliest_ship_date DATETIME2,
+    latest_ship_date DATETIME2,
+    earliest_delivery_date DATETIME2,
+    latest_delivery_date DATETIME2,
+    
     -- Notes and Instructions
-    notes TEXT,
-    instructions TEXT,
-    gift_note TEXT,
-    extra_notes TEXT,
-    extra_notes1 TEXT,
-    extra_notes2 TEXT,
-    extra_notes3 TEXT,
-    extra_notes4 TEXT,
-    extra_notes5 TEXT,
-
+    notes NVARCHAR(MAX),
+    instructions NVARCHAR(MAX),
+    gift_note NVARCHAR(MAX),
+    extra_notes NVARCHAR(MAX),
+    extra_notes1 NVARCHAR(MAX),
+    extra_notes2 NVARCHAR(MAX),
+    extra_notes3 NVARCHAR(MAX),
+    extra_notes4 NVARCHAR(MAX),
+    extra_notes5 NVARCHAR(MAX),
+    
     -- Document Flags
-    is_document_exist VARCHAR(50),
-    is_waybill_printed BOOLEAN,
-    is_carrier_label_printed BOOLEAN,
-    is_pick_list_printed BOOLEAN,
-
+    is_document_exist NVARCHAR(MAX),
+    is_waybill_printed BIT,
+    is_carrier_label_printed BIT,
+    is_pick_list_printed BIT,
+    
     -- Purchase Order
-    purchase_order_id BIGINT,
-    purchase_order_code VARCHAR(255),
-
+    purchase_order_id INT,
+    purchase_order_code NVARCHAR(MAX),
+    
     -- Status Flags
-    is_imported BOOLEAN,
-    is_exported BOOLEAN,
-    is_exported2 BOOLEAN,
-    is_exported4 BOOLEAN,
-    is_exported5 BOOLEAN,
-    is_backorder BOOLEAN,
-    is_allocated BOOLEAN,
-    is_picking_started BOOLEAN,
-    is_picking_completed BOOLEAN,
-    is_cancel_requested BOOLEAN,
-    is_gift BOOLEAN,
-    is_prime_order BOOLEAN,
-    is_address_verified BOOLEAN,
-    is_get_order_details BOOLEAN,
-    is_auto_generate BOOLEAN,
-    is_use_same_lot_number BOOLEAN,
-    is_allow_changing_tax_and_duties_payor BOOLEAN,
-    is_get_customer_address_info BOOLEAN,
-    is_use_saturday_delivery BOOLEAN,
-    is_skip_adress_verification_stamps BOOLEAN,
-    is_fedex_one_rate BOOLEAN,
-
+    is_imported BIT,
+    is_exported BIT,
+    is_exported2 BIT,
+    is_exported4 BIT,
+    is_exported5 BIT,
+    is_backorder BIT,
+    is_allocated BIT,
+    is_picking_started BIT,
+    is_picking_completed BIT,
+    is_cancel_requested BIT,
+    is_gift BIT,
+    is_prime_order BIT,
+    is_address_verified BIT,
+    is_get_order_details BIT,
+    is_auto_generate BIT,
+    is_use_same_lot_number BIT,
+    is_allow_changing_tax_and_duties_payor BIT,
+    is_get_customer_address_info BIT,
+    is_use_saturday_delivery BIT,
+    is_skip_adress_verification_stamps BIT,
+    is_fedex_one_rate BIT,
+    
     -- Invoice Information
-    invoice_customer_id BIGINT,
-    invoice_customer_party_id BIGINT,
-    invoice_customer_description VARCHAR(500),
-    invoice_customer_address_id BIGINT,
-    invoice_customer_address_description VARCHAR(500),
-    invoice_no VARCHAR(255),
-    delivery_note_no VARCHAR(255),
-
+    invoice_customer_id INT,
+    invoice_customer_party_id INT,
+    invoice_customer_description NVARCHAR(MAX),
+    invoice_customer_address_id INT,
+    invoice_customer_address_description NVARCHAR(MAX),
+    invoice_no NVARCHAR(MAX),
+    delivery_note_no NVARCHAR(MAX),
+    
     -- Financial Information
-    total_sales_gross_price DECIMAL(18, 8),
-    total_sales_vat DECIMAL(18, 8),
-    total_sales_discount DECIMAL(18, 8),
-    cargo_discount DECIMAL(18, 8),
-    total_markup_rate DECIMAL(18, 8),
-    total_carrier_rate DECIMAL(18, 8),
-    order_risk_score DECIMAL(18, 8),
-    insurance_cost DECIMAL(18, 8),
-
+    total_sales_gross_price DECIMAL(18,2),
+    total_sales_vat DECIMAL(18,2),
+    total_sales_discount DECIMAL(18,2),
+    cargo_discount DECIMAL(18,2),
+    total_markup_rate DECIMAL(18,2),
+    total_carrier_rate DECIMAL(18,2),
+    order_risk_score DECIMAL(18,2),
+    insurance_cost DECIMAL(18,2),
+    
     -- Additional Information
-    account_number VARCHAR(100),
-    driver VARCHAR(255),
-    platenumber VARCHAR(100),
-    billing_type_id BIGINT,
-    billing_type_description VARCHAR(255),
-    route_id BIGINT,
-    route_description VARCHAR(500),
-    channel_description VARCHAR(500),
-    integration_key VARCHAR(255),
-    entered_by VARCHAR(255),
-    canceled_by VARCHAR(255),
+    account_number NVARCHAR(MAX),
+    driver NVARCHAR(MAX),
+    platenumber NVARCHAR(MAX),
+    billing_type_id INT,
+    billing_type_description NVARCHAR(MAX),
+    route_id INT,
+    route_description NVARCHAR(MAX),
+    channel_description NVARCHAR(MAX),
+    integration_key NVARCHAR(MAX),
+    entered_by NVARCHAR(MAX),
+    canceled_by NVARCHAR(MAX),
     nof_shipment_label INT,
     nof_products INT,
-    store_name VARCHAR(255),
-    linked_channel_id BIGINT,
-    linked_channel_description VARCHAR(500),
-
+    store_name NVARCHAR(MAX),
+    linked_channel_id INT,
+    linked_channel_description NVARCHAR(MAX),
+    
     -- Address References
-    customer_address_id BIGINT,
-    customer_address_description TEXT,
-
+    customer_address_id INT,
+    customer_address_description NVARCHAR(MAX),
+    
     -- Project Information
-    project_id BIGINT,
-    project_description VARCHAR(500),
-
+    project_id INT,
+    project_description NVARCHAR(MAX),
+    
     -- Receipt Information
-    warehouse_receipt_id BIGINT,
-    warehouse_receipt_code VARCHAR(255),
-    warehouse_receipt_type_id BIGINT,
-    receipt_order_code VARCHAR(255),
-
+    warehouse_receipt_id INT,
+    warehouse_receipt_code NVARCHAR(MAX),
+    warehouse_receipt_type_id INT,
+    receipt_order_code NVARCHAR(MAX),
+    
     -- Related Orders
-    back_warehouse_order_code VARCHAR(255),
-    back_warehouse_order_id BIGINT,
-    drop_ship_master_order_id BIGINT,
-    drop_ship_warehouse_order_code VARCHAR(255),
-    drop_ship_notes TEXT,
-    master_warehouse_order_code VARCHAR(255),
-    warehouse_drop_ship_order_code VARCHAR(255),
-    warehouse_back_order_code VARCHAR(255),
-    warehouse_master_order_code VARCHAR(255),
-    warehouse_receipt_order_code VARCHAR(255),
-
+    back_warehouse_order_code NVARCHAR(MAX),
+    back_warehouse_order_id INT,
+    drop_ship_master_order_id INT,
+    drop_ship_warehouse_order_code NVARCHAR(MAX),
+    drop_ship_notes NVARCHAR(MAX),
+    master_warehouse_order_code NVARCHAR(MAX),
+    warehouse_drop_ship_order_code NVARCHAR(MAX),
+    warehouse_back_order_code NVARCHAR(MAX),
+    warehouse_master_order_code NVARCHAR(MAX),
+    warehouse_receipt_order_code NVARCHAR(MAX),
+    
     -- Channel Information
-    channel_order_code VARCHAR(255),
-    client_party_id BIGINT,
-    channel_depositor_parameter_id BIGINT,
-
+    channel_order_code NVARCHAR(MAX),
+    client_party_id INT,
+    channel_depositor_parameter_id INT,
+    
     -- Warehouse Information
-    po_window_warehouse_id BIGINT,
-
+    po_window_warehouse_id INT,
+    
     -- Cancellation Information
-    ware_order_cancel_reason_id BIGINT,
-    ware_order_cancel_reason_description VARCHAR(500),
-    warehouse_ord_return_reason_id BIGINT,
-    warehouse_ord_return_reason_description VARCHAR(500),
-
+    ware_order_cancel_reason_id INT,
+    ware_order_cancel_reason_description NVARCHAR(MAX),
+    warehouse_ord_return_reason_id INT,
+    warehouse_ord_return_reason_description NVARCHAR(MAX),
+    
     -- Order Items
-    order_items TEXT,
-
+    order_items NVARCHAR(MAX),
+    
     -- EDI Reference
-    master_edi_reference VARCHAR(255),
-
+    master_edi_reference NVARCHAR(MAX),
+    
     -- Priority
     priority INT,
-
+    
     -- Fraud Detection
-    fraud_recommendation_id BIGINT,
-    fraud_recommendation_code VARCHAR(100),
-    fraud_recommendation_description VARCHAR(500),
-
+    fraud_recommendation_id INT,
+    fraud_recommendation_code NVARCHAR(MAX),
+    fraud_recommendation_description NVARCHAR(MAX),
+    
     -- Shipment Method
-    shipment_method_id BIGINT,
-    shipment_method_description VARCHAR(500),
-
+    shipment_method_id INT,
+    shipment_method_description NVARCHAR(MAX),
+    
     -- Stock Information
     avaliable_stock_quantity INT,
-
+    
     -- Store
-    store VARCHAR(255),
-
+    store NVARCHAR(MAX),
+    
     -- Company
-    company_name VARCHAR(500),
-
+    company_name NVARCHAR(MAX),
+    
     -- Carrier Info
-    party_carrier_info_id BIGINT,
+    party_carrier_info_id INT,
     business_days_in_transit INT,
-
+    
     -- Supplier Information
-    supplier_id BIGINT,
-    supplier_address_id BIGINT,
-
+    supplier_id INT,
+    supplier_address_id INT,
+    
     -- Customer Information
-    customer_email VARCHAR(500),
-
+    customer_email NVARCHAR(MAX),
+    
     -- Operation Status
-    warehouse_order_operation_status VARCHAR(255),
-
+    warehouse_order_operation_status NVARCHAR(MAX),
+    
     -- FBA Order Information
-    org_fba_order_id BIGINT,
-    warehouse_fba_order_status_code VARCHAR(100),
-    warehouse_fba_order_status_desc VARCHAR(500),
-
+    org_fba_order_id INT,
+    warehouse_fba_order_status_code NVARCHAR(MAX),
+    warehouse_fba_order_status_desc NVARCHAR(MAX),
+    
     -- Selected Order
-    selected_order VARCHAR(255),
-
+    selected_order NVARCHAR(MAX),
+    
     -- Package Information
-    package_code VARCHAR(255),
-    sscc VARCHAR(255),
-    shipment_type_id BIGINT,
-    insurance_type VARCHAR(100),
-
+    package_code NVARCHAR(MAX),
+    sscc NVARCHAR(MAX),
+    shipment_type_id INT,
+    insurance_type NVARCHAR(MAX),
+    
     -- Tax and Duties
-    taxes_and_duties_billing_type VARCHAR(100),
-    tax_and_duties_payor_info TEXT,
-
+    taxes_and_duties_billing_type NVARCHAR(MAX),
+    tax_and_duties_payor_info NVARCHAR(MAX),
+    
     -- API Response Metadata
-    success BOOLEAN,
-    success_message TEXT,
+    success BIT,
+    success_message NVARCHAR(MAX),
     page_size INT,
     selected_page_index INT,
     page_count INT,
     record_count INT,
-
+    
     -- Processing Metadata
-    api_fetch_timestamp TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    -- Indexes
-    INDEX idx_code (code),
-    INDEX idx_customer_id (customer_id),
-    INDEX idx_warehouse_id (warehouse_id),
-    INDEX idx_order_date (order_date),
-    INDEX idx_status_code (warehouse_order_status_code),
-    INDEX idx_last_modified (last_modified_date)
+    api_fetch_timestamp DATETIME2,
+    created_at DATETIME2 DEFAULT GETDATE(),
+    updated_at DATETIME2 DEFAULT GETDATE()
 );
+
+-- Indexes for ShipmentOrder
+CREATE INDEX idx_code ON dbo.ShipmentOrder(code);
+CREATE INDEX idx_customer_id ON dbo.ShipmentOrder(customer_id);
+CREATE INDEX idx_warehouse_id ON dbo.ShipmentOrder(warehouse_id);
+CREATE INDEX idx_order_date ON dbo.ShipmentOrder(order_date);
+CREATE INDEX idx_status_code ON dbo.ShipmentOrder(warehouse_order_status_code);
+CREATE INDEX idx_last_modified ON dbo.ShipmentOrder(last_modified_date);
 
 -- ============================================================================
 -- ORDER LINE ITEMS TABLE
 -- ============================================================================
-CREATE TABLE shipment_order_line (
-    id BIGINT PRIMARY KEY,
-    code VARCHAR(255) NOT NULL,
-    warehouse_order_id BIGINT NOT NULL,
-
+CREATE TABLE dbo.ShipmentOrder_Line (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    code NVARCHAR(MAX) NOT NULL,
+    warehouse_order_id INT NOT NULL,
+    
     -- Inventory Item Information
-    inventory_item_id BIGINT,
-    inventory_item_description VARCHAR(500),
-    inventory_item_info VARCHAR(1000),
-    barcode VARCHAR(255),
-    display_member VARCHAR(1000),
-
+    inventory_item_id INT,
+    inventory_item_description NVARCHAR(MAX),
+    inventory_item_info NVARCHAR(MAX),
+    barcode NVARCHAR(MAX),
+    display_member NVARCHAR(MAX),
+    
     -- Pack Type Information
-    inventory_item_pack_type_id BIGINT,
-    inventory_item_pack_type_description VARCHAR(255),
+    inventory_item_pack_type_id INT,
+    inventory_item_pack_type_description NVARCHAR(MAX),
     pack_quantity INT,
-
+    
     -- Insurance
-    insurance_amount_per_unit DECIMAL(18, 8),
-
+    insurance_amount_per_unit DECIMAL(18,2),
+    
     -- EDI Reference
-    edi_reference VARCHAR(255),
-
+    edi_reference NVARCHAR(MAX),
+    
     -- Physical Dimensions
-    unit_weight DECIMAL(18, 8),
-    unit_volume DECIMAL(18, 8),
-    total_weight DECIMAL(18, 8),
-    total_volume DECIMAL(18, 8),
-    line_weight DECIMAL(18, 8),
-
+    unit_weight DECIMAL(18,4),
+    unit_volume DECIMAL(18,4),
+    total_weight DECIMAL(18,4),
+    total_volume DECIMAL(18,4),
+    line_weight DECIMAL(18,4),
+    
     -- Quantities
     allocated_cu_quantity INT,
     picked_cu_quantity INT,
@@ -317,212 +318,133 @@ CREATE TABLE shipment_order_line (
     sorted_cu_quantity INT,
     packed_cu_quantity INT,
     cancelled_cu_quantity INT,
-
+    
     -- Free Attributes
-    free_attr1 VARCHAR(500),
-    free_attr2 VARCHAR(500),
-    free_attr3 VARCHAR(500),
-
+    free_attr1 NVARCHAR(MAX),
+    free_attr2 NVARCHAR(MAX),
+    free_attr3 NVARCHAR(MAX),
+    
     -- Pricing
-    currency_price DECIMAL(18, 8),
-    tax_rate DECIMAL(18, 8),
-    net_currency_price DECIMAL(18, 8),
-    sales_unit_price DECIMAL(18, 8),
-
+    currency_price DECIMAL(18,2),
+    tax_rate DECIMAL(18,4),
+    net_currency_price DECIMAL(18,2),
+    sales_unit_price DECIMAL(18,2),
+    
     -- Supplier
-    supplier_id BIGINT,
-    supplier_description VARCHAR(500),
-
+    supplier_id INT,
+    supplier_description NVARCHAR(MAX),
+    
     -- Notes
-    notes1 TEXT,
-    notes2 TEXT,
-    notes3 TEXT,
-
+    notes1 NVARCHAR(MAX),
+    notes2 NVARCHAR(MAX),
+    notes3 NVARCHAR(MAX),
+    
     -- Channel Order Detail
-    channel_order_detail_code VARCHAR(255),
-
+    channel_order_detail_code NVARCHAR(MAX),
+    
     -- Lot and Batch Information
-    lot_no VARCHAR(255),
-    expiry_date TIMESTAMP,
-    production_date TIMESTAMP,
-
+    lot_no NVARCHAR(MAX),
+    expiry_date DATETIME2,
+    production_date DATETIME2,
+    
     -- Package Type
-    package_type VARCHAR(255),
-
+    package_type NVARCHAR(MAX),
+    
     -- Stock Kit
-    stock_kit_code VARCHAR(255),
-
+    stock_kit_code NVARCHAR(MAX),
+    
     -- Suitability and Quarantine
-    suitability_reason VARCHAR(500),
-    quarantine_reason VARCHAR(500),
+    suitability_reason NVARCHAR(MAX),
+    quarantine_reason NVARCHAR(MAX),
 
+    -- Logiwa status IDs
+    warehouse_status_id INT,
+    custom_status_id INT,
+    fba_status_id INT,
+    
     -- Metadata
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    INDEX idx_inventory_item_id (inventory_item_id),
-    INDEX idx_barcode (barcode),
-    INDEX idx_code (code)
+    created_at DATETIME2 DEFAULT GETDATE(),
+    updated_at DATETIME2 DEFAULT GETDATE(),
+    
+    CONSTRAINT FK_ShipmentOrderLine_ShipmentOrder 
+        FOREIGN KEY (warehouse_order_id) 
+        REFERENCES dbo.ShipmentOrder(id) 
+        ON DELETE CASCADE
 );
+
+-- Indexes for ShipmentOrder_Line
+CREATE INDEX idx_line_warehouse_order_id ON dbo.ShipmentOrder_Line(warehouse_order_id);
+CREATE INDEX idx_line_inventory_item_id ON dbo.ShipmentOrder_Line(inventory_item_id);
+CREATE INDEX idx_line_barcode ON dbo.ShipmentOrder_Line(barcode);
+CREATE INDEX idx_line_code ON dbo.ShipmentOrder_Line(code);
 
 -- ============================================================================
 -- ADDRESS TABLE
 -- ============================================================================
-CREATE TABLE shipment_order_address (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_order_id BIGINT NOT NULL,
-    address_type VARCHAR(50) NOT NULL, -- 'SHIPPING', 'BILLING', 'THIRD_PARTY'
-
+CREATE TABLE dbo.ShipmentOrder_Address (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    warehouse_order_id INT NOT NULL,
+    address_type NVARCHAR(50) NOT NULL, -- 'SHIPPING', 'BILLING', 'THIRD_PARTY'
+    
     -- Account Information
-    account_number VARCHAR(100),
-
+    account_number NVARCHAR(MAX),
+    
     -- Address Details
-    country VARCHAR(100),
-    state VARCHAR(100),
-    city VARCHAR(255),
-    customer_address VARCHAR(1000),
-    address_text TEXT,
-    address_directions TEXT,
-    postal_code VARCHAR(50),
-
+    country NVARCHAR(MAX),
+    state NVARCHAR(MAX),
+    city NVARCHAR(MAX),
+    customer_address NVARCHAR(MAX),
+    address_text NVARCHAR(MAX),
+    address_directions NVARCHAR(MAX),
+    postal_code NVARCHAR(MAX),
+    
     -- Metadata
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    INDEX idx_address_type (address_type)
+    created_at DATETIME2 DEFAULT GETDATE(),
+    updated_at DATETIME2 DEFAULT GETDATE(),
+    
+    CONSTRAINT FK_ShipmentOrderAddress_ShipmentOrder 
+        FOREIGN KEY (warehouse_order_id) 
+        REFERENCES dbo.ShipmentOrder(id) 
+        ON DELETE CASCADE
 );
+
+-- Indexes for ShipmentOrder_Address
+CREATE INDEX idx_address_warehouse_order_id ON dbo.ShipmentOrder_Address(warehouse_order_id);
+CREATE INDEX idx_address_type ON dbo.ShipmentOrder_Address(address_type);
 
 -- ============================================================================
--- JUNCTION TABLES FOR ARRAY FIELDS
+-- RUNS TABLE
 -- ============================================================================
-
--- Warehouse Order Status IDs
-CREATE TABLE shipment_order_status_mapping (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_order_id BIGINT NOT NULL,
-    status_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    INDEX idx_status_id (status_id),
-    UNIQUE KEY unique_order_status (warehouse_order_id, status_id)
-);
-
--- Carrier IDs
-CREATE TABLE shipment_order_carrier_mapping (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_order_id BIGINT NOT NULL,
-    carrier_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    INDEX idx_carrier_id (carrier_id),
-    UNIQUE KEY unique_order_carrier (warehouse_order_id, carrier_id)
-);
-
--- Channel IDs
-CREATE TABLE shipment_order_channel_mapping (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_order_id BIGINT NOT NULL,
-    channel_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    INDEX idx_channel_id (channel_id),
-    UNIQUE KEY unique_order_channel (warehouse_order_id, channel_id)
-);
-
--- Order Custom Status IDs
-CREATE TABLE shipment_order_custom_status_mapping (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_order_id BIGINT NOT NULL,
-    custom_status_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    INDEX idx_custom_status_id (custom_status_id),
-    UNIQUE KEY unique_order_custom_status (warehouse_order_id, custom_status_id)
-);
-
--- Warehouse FBA Order Status IDs
-CREATE TABLE shipment_order_fba_status_mapping (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_order_id BIGINT NOT NULL,
-    fba_status_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    INDEX idx_fba_status_id (fba_status_id),
-    UNIQUE KEY unique_order_fba_status (warehouse_order_id, fba_status_id)
-);
-
--- ============================================================================
--- ERROR TABLE
--- ============================================================================
-CREATE TABLE shipment_order_error (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_order_id BIGINT NOT NULL,
-    error_message TEXT NOT NULL,
-    error_code VARCHAR(100),
-    error_field VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    INDEX idx_error_code (error_code)
-);
-
-create table ShipmentOrder_Runs (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    fetched_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    success BOOLEAN
+CREATE TABLE dbo.ShipmentOrder_Runs (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    fetch_timestamp DATETIME2 DEFAULT GETDATE(),
+    success BIT
 );
 
 -- ============================================================================
 -- STAGING TABLE
 -- ============================================================================
-CREATE TABLE staging_shipment_order (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_order_id BIGINT NOT NULL,
-    raw_json TEXT NOT NULL,
-    fetch_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE dbo.ShipmentOrder_Staging (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    order_id INT NOT NULL,
+    raw_json NVARCHAR(MAX) NOT NULL,
+    fetch_timestamp DATETIME2 DEFAULT GETDATE(),
 
-    FOREIGN KEY (warehouse_order_id) REFERENCES shipment_order(id) ON DELETE CASCADE,
-
-    -- Indexes
-    INDEX idx_warehouse_order_id (warehouse_order_id),
-    UNIQUE KEY unique_order_custom_status (id, warehouse_order_id)
+    CONSTRAINT FK_ShipmentOrderStaging_ShipmentOrder 
+        FOREIGN KEY (order_id) 
+        REFERENCES dbo.ShipmentOrder(id) 
+        ON DELETE CASCADE
 );
+
+-- Create indexes for ShipmentOrder_Staging
+CREATE INDEX idx_warehouse_order_id ON dbo.ShipmentOrder_Staging(order_id);
+CREATE UNIQUE INDEX unique_order_custom_status ON dbo.ShipmentOrder_Staging(id, order_id);
 
 -- ============================================================================
 -- COMMENTS AND DOCUMENTATION
 -- ============================================================================
 
 -- Table Relationships:
--- 1. shipment_order (1) -> (Many) shipment_order_line
--- 2. shipment_order (1) -> (Many) shipment_order_address
+-- 1. ShipmentOrder (1) -> (Many) ShipmentOrder_Line
+-- 2. ShipmentOrder (1) -> (Many) ShipmentOrder_Address
+-- 3. ShipmentOrder (1) -> (Many) ShipmentOrder_Staging
