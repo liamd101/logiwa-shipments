@@ -6,52 +6,52 @@
 -- MAIN ORDER TABLE
 -- ============================================================================
 CREATE TABLE dbo.ShipmentOrder (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    code NVARCHAR(MAX) NOT NULL,
-    priority_id NVARCHAR(MAX),
-    customer_ref_code NVARCHAR(MAX),
-    depositor_ref_code NVARCHAR(MAX),
-    customer_order_no NVARCHAR(MAX),
-    depositor_order_no NVARCHAR(MAX),
-    warehouse_order_status_code NVARCHAR(MAX),
+    id INT PRIMARY KEY,
+    code NVARCHAR(255) NOT NULL,
+    priority_id NVARCHAR(255),
+    customer_ref_code NVARCHAR(255),
+    depositor_ref_code NVARCHAR(255),
+    customer_order_no NVARCHAR(255),
+    depositor_order_no NVARCHAR(255),
+    warehouse_order_status_code NVARCHAR(255),
     
     -- Customer Information
     customer_id INT,
-    customer_code NVARCHAR(MAX),
-    customer_description NVARCHAR(MAX),
+    customer_code NVARCHAR(255),
+    customer_description NVARCHAR(255),
     
     -- Site and Warehouse Information
     inventory_site_id INT,
-    inventory_site_code NVARCHAR(MAX),
+    inventory_site_code NVARCHAR(255),
     warehouse_id INT,
-    warehouse_code NVARCHAR(MAX),
-    warehouse_description NVARCHAR(MAX),
+    warehouse_code NVARCHAR(255),
+    warehouse_description NVARCHAR(255),
     
     -- Depositor Information
     depositor_id INT,
-    depositor_code NVARCHAR(MAX),
-    depositor_description NVARCHAR(MAX),
+    depositor_code NVARCHAR(255),
+    depositor_description NVARCHAR(255),
     
     -- Printing Preferences
     is_print_carrier_label_pack_list_as_label BIT,
     is_print_carrier_label_pack_list_on_same_page BIT,
     
     -- Carrier Information
-    carrier_tracking_number NVARCHAR(MAX),
-    carrier_description NVARCHAR(MAX),
+    carrier_tracking_number NVARCHAR(255),
+    carrier_description NVARCHAR(255),
     carrier_shipping_options_id INT,
     carrier_depositor_list_id INT,
     carrier_rate DECIMAL(18,2),
     carrier_markup_rate DECIMAL(18,2),
     carrier_package_type_id INT,
-    carrier_weight NVARCHAR(MAX),
+    carrier_weight NVARCHAR(255),
     carrier_billing_type_id INT,
-    carrier_billing_type_description NVARCHAR(MAX),
-    carrier_shipping_description NVARCHAR(MAX),
+    carrier_billing_type_description NVARCHAR(255),
+    carrier_shipping_description NVARCHAR(255),
     
     -- Order Type
     warehouse_order_type_id INT,
-    warehouse_order_type_code NVARCHAR(MAX),
+    warehouse_order_type_code NVARCHAR(255),
     is_amazon_fba BIT,
     
     -- Dates
@@ -74,25 +74,25 @@ CREATE TABLE dbo.ShipmentOrder (
     latest_delivery_date DATETIME2,
     
     -- Notes and Instructions
-    notes NVARCHAR(MAX),
-    instructions NVARCHAR(MAX),
-    gift_note NVARCHAR(MAX),
-    extra_notes NVARCHAR(MAX),
-    extra_notes1 NVARCHAR(MAX),
-    extra_notes2 NVARCHAR(MAX),
-    extra_notes3 NVARCHAR(MAX),
-    extra_notes4 NVARCHAR(MAX),
-    extra_notes5 NVARCHAR(MAX),
+    notes NVARCHAR(255),
+    instructions NVARCHAR(255),
+    gift_note NVARCHAR(255),
+    extra_notes NVARCHAR(255),
+    extra_notes1 NVARCHAR(255),
+    extra_notes2 NVARCHAR(255),
+    extra_notes3 NVARCHAR(255),
+    extra_notes4 NVARCHAR(255),
+    extra_notes5 NVARCHAR(255),
     
     -- Document Flags
-    is_document_exist NVARCHAR(MAX),
+    is_document_exist NVARCHAR(255),
     is_waybill_printed BIT,
     is_carrier_label_printed BIT,
     is_pick_list_printed BIT,
     
     -- Purchase Order
     purchase_order_id INT,
-    purchase_order_code NVARCHAR(MAX),
+    purchase_order_code NVARCHAR(255),
     
     -- Status Flags
     is_imported BIT,
@@ -120,11 +120,11 @@ CREATE TABLE dbo.ShipmentOrder (
     -- Invoice Information
     invoice_customer_id INT,
     invoice_customer_party_id INT,
-    invoice_customer_description NVARCHAR(MAX),
+    invoice_customer_description NVARCHAR(255),
     invoice_customer_address_id INT,
-    invoice_customer_address_description NVARCHAR(MAX),
-    invoice_no NVARCHAR(MAX),
-    delivery_note_no NVARCHAR(MAX),
+    invoice_customer_address_description NVARCHAR(255),
+    invoice_no NVARCHAR(255),
+    delivery_note_no NVARCHAR(255),
     
     -- Financial Information
     total_sales_gross_price DECIMAL(18,2),
@@ -137,51 +137,51 @@ CREATE TABLE dbo.ShipmentOrder (
     insurance_cost DECIMAL(18,2),
     
     -- Additional Information
-    account_number NVARCHAR(MAX),
-    driver NVARCHAR(MAX),
-    platenumber NVARCHAR(MAX),
+    account_number NVARCHAR(255),
+    driver NVARCHAR(255),
+    platenumber NVARCHAR(255),
     billing_type_id INT,
-    billing_type_description NVARCHAR(MAX),
+    billing_type_description NVARCHAR(255),
     route_id INT,
-    route_description NVARCHAR(MAX),
-    channel_description NVARCHAR(MAX),
-    integration_key NVARCHAR(MAX),
-    entered_by NVARCHAR(MAX),
-    canceled_by NVARCHAR(MAX),
+    route_description NVARCHAR(255),
+    channel_description NVARCHAR(255),
+    integration_key NVARCHAR(255),
+    entered_by NVARCHAR(255),
+    canceled_by NVARCHAR(255),
     nof_shipment_label INT,
     nof_products INT,
-    store_name NVARCHAR(MAX),
+    store_name NVARCHAR(255),
     linked_channel_id INT,
-    linked_channel_description NVARCHAR(MAX),
+    linked_channel_description NVARCHAR(255),
     
     -- Address References
     customer_address_id INT,
-    customer_address_description NVARCHAR(MAX),
+    customer_address_description NVARCHAR(255),
     
     -- Project Information
     project_id INT,
-    project_description NVARCHAR(MAX),
+    project_description NVARCHAR(255),
     
     -- Receipt Information
     warehouse_receipt_id INT,
-    warehouse_receipt_code NVARCHAR(MAX),
+    warehouse_receipt_code NVARCHAR(255),
     warehouse_receipt_type_id INT,
-    receipt_order_code NVARCHAR(MAX),
+    receipt_order_code NVARCHAR(255),
     
     -- Related Orders
-    back_warehouse_order_code NVARCHAR(MAX),
+    back_warehouse_order_code NVARCHAR(255),
     back_warehouse_order_id INT,
     drop_ship_master_order_id INT,
-    drop_ship_warehouse_order_code NVARCHAR(MAX),
-    drop_ship_notes NVARCHAR(MAX),
-    master_warehouse_order_code NVARCHAR(MAX),
-    warehouse_drop_ship_order_code NVARCHAR(MAX),
-    warehouse_back_order_code NVARCHAR(MAX),
-    warehouse_master_order_code NVARCHAR(MAX),
-    warehouse_receipt_order_code NVARCHAR(MAX),
+    drop_ship_warehouse_order_code NVARCHAR(255),
+    drop_ship_notes NVARCHAR(255),
+    master_warehouse_order_code NVARCHAR(255),
+    warehouse_drop_ship_order_code NVARCHAR(255),
+    warehouse_back_order_code NVARCHAR(255),
+    warehouse_master_order_code NVARCHAR(255),
+    warehouse_receipt_order_code NVARCHAR(255),
     
     -- Channel Information
-    channel_order_code NVARCHAR(MAX),
+    channel_order_code NVARCHAR(255),
     client_party_id INT,
     channel_depositor_parameter_id INT,
     
@@ -190,36 +190,36 @@ CREATE TABLE dbo.ShipmentOrder (
     
     -- Cancellation Information
     ware_order_cancel_reason_id INT,
-    ware_order_cancel_reason_description NVARCHAR(MAX),
+    ware_order_cancel_reason_description NVARCHAR(255),
     warehouse_ord_return_reason_id INT,
-    warehouse_ord_return_reason_description NVARCHAR(MAX),
+    warehouse_ord_return_reason_description NVARCHAR(255),
     
     -- Order Items
-    order_items NVARCHAR(MAX),
+    order_items NVARCHAR(255),
     
     -- EDI Reference
-    master_edi_reference NVARCHAR(MAX),
+    master_edi_reference NVARCHAR(255),
     
     -- Priority
     priority INT,
     
     -- Fraud Detection
     fraud_recommendation_id INT,
-    fraud_recommendation_code NVARCHAR(MAX),
-    fraud_recommendation_description NVARCHAR(MAX),
+    fraud_recommendation_code NVARCHAR(255),
+    fraud_recommendation_description NVARCHAR(255),
     
     -- Shipment Method
     shipment_method_id INT,
-    shipment_method_description NVARCHAR(MAX),
+    shipment_method_description NVARCHAR(255),
     
     -- Stock Information
     avaliable_stock_quantity INT,
     
     -- Store
-    store NVARCHAR(MAX),
+    store NVARCHAR(255),
     
     -- Company
-    company_name NVARCHAR(MAX),
+    company_name NVARCHAR(255),
     
     -- Carrier Info
     party_carrier_info_id INT,
@@ -230,32 +230,32 @@ CREATE TABLE dbo.ShipmentOrder (
     supplier_address_id INT,
     
     -- Customer Information
-    customer_email NVARCHAR(MAX),
+    customer_email NVARCHAR(255),
     
     -- Operation Status
-    warehouse_order_operation_status NVARCHAR(MAX),
+    warehouse_order_operation_status NVARCHAR(255),
     
     -- FBA Order Information
     org_fba_order_id INT,
-    warehouse_fba_order_status_code NVARCHAR(MAX),
-    warehouse_fba_order_status_desc NVARCHAR(MAX),
+    warehouse_fba_order_status_code NVARCHAR(255),
+    warehouse_fba_order_status_desc NVARCHAR(255),
     
     -- Selected Order
-    selected_order NVARCHAR(MAX),
+    selected_order NVARCHAR(255),
     
     -- Package Information
-    package_code NVARCHAR(MAX),
-    sscc NVARCHAR(MAX),
+    package_code NVARCHAR(255),
+    sscc NVARCHAR(255),
     shipment_type_id INT,
-    insurance_type NVARCHAR(MAX),
+    insurance_type NVARCHAR(255),
     
     -- Tax and Duties
-    taxes_and_duties_billing_type NVARCHAR(MAX),
-    tax_and_duties_payor_info NVARCHAR(MAX),
+    taxes_and_duties_billing_type NVARCHAR(255),
+    tax_and_duties_payor_info NVARCHAR(255),
     
     -- API Response Metadata
     success BIT,
-    success_message NVARCHAR(MAX),
+    success_message NVARCHAR(255),
     page_size INT,
     selected_page_index INT,
     page_count INT,
@@ -280,26 +280,26 @@ CREATE INDEX idx_last_modified ON dbo.ShipmentOrder(last_modified_date);
 -- ============================================================================
 CREATE TABLE dbo.ShipmentOrder_Line (
     id INT IDENTITY(1,1) PRIMARY KEY,
-    code NVARCHAR(MAX) NOT NULL,
+    code NVARCHAR(255) NOT NULL,
     warehouse_order_id INT NOT NULL,
     
     -- Inventory Item Information
     inventory_item_id INT,
-    inventory_item_description NVARCHAR(MAX),
-    inventory_item_info NVARCHAR(MAX),
-    barcode NVARCHAR(MAX),
-    display_member NVARCHAR(MAX),
+    inventory_item_description NVARCHAR(255),
+    inventory_item_info NVARCHAR(255),
+    barcode NVARCHAR(255),
+    display_member NVARCHAR(255),
     
     -- Pack Type Information
     inventory_item_pack_type_id INT,
-    inventory_item_pack_type_description NVARCHAR(MAX),
+    inventory_item_pack_type_description NVARCHAR(255),
     pack_quantity INT,
     
     -- Insurance
     insurance_amount_per_unit DECIMAL(18,2),
     
     -- EDI Reference
-    edi_reference NVARCHAR(MAX),
+    edi_reference NVARCHAR(255),
     
     -- Physical Dimensions
     unit_weight DECIMAL(18,4),
@@ -320,9 +320,9 @@ CREATE TABLE dbo.ShipmentOrder_Line (
     cancelled_cu_quantity INT,
     
     -- Free Attributes
-    free_attr1 NVARCHAR(MAX),
-    free_attr2 NVARCHAR(MAX),
-    free_attr3 NVARCHAR(MAX),
+    free_attr1 NVARCHAR(255),
+    free_attr2 NVARCHAR(255),
+    free_attr3 NVARCHAR(255),
     
     -- Pricing
     currency_price DECIMAL(18,2),
@@ -332,30 +332,30 @@ CREATE TABLE dbo.ShipmentOrder_Line (
     
     -- Supplier
     supplier_id INT,
-    supplier_description NVARCHAR(MAX),
+    supplier_description NVARCHAR(255),
     
     -- Notes
-    notes1 NVARCHAR(MAX),
-    notes2 NVARCHAR(MAX),
-    notes3 NVARCHAR(MAX),
+    notes1 NVARCHAR(255),
+    notes2 NVARCHAR(255),
+    notes3 NVARCHAR(255),
     
     -- Channel Order Detail
-    channel_order_detail_code NVARCHAR(MAX),
+    channel_order_detail_code NVARCHAR(255),
     
     -- Lot and Batch Information
-    lot_no NVARCHAR(MAX),
+    lot_no NVARCHAR(255),
     expiry_date DATETIME2,
     production_date DATETIME2,
     
     -- Package Type
-    package_type NVARCHAR(MAX),
+    package_type NVARCHAR(255),
     
     -- Stock Kit
-    stock_kit_code NVARCHAR(MAX),
+    stock_kit_code NVARCHAR(255),
     
     -- Suitability and Quarantine
-    suitability_reason NVARCHAR(MAX),
-    quarantine_reason NVARCHAR(MAX),
+    suitability_reason NVARCHAR(255),
+    quarantine_reason NVARCHAR(255),
 
     -- Logiwa status IDs
     warehouse_status_id INT,
@@ -387,16 +387,16 @@ CREATE TABLE dbo.ShipmentOrder_Address (
     address_type NVARCHAR(50) NOT NULL, -- 'SHIPPING', 'BILLING', 'THIRD_PARTY'
     
     -- Account Information
-    account_number NVARCHAR(MAX),
+    account_number NVARCHAR(255),
     
     -- Address Details
-    country NVARCHAR(MAX),
-    state NVARCHAR(MAX),
-    city NVARCHAR(MAX),
-    customer_address NVARCHAR(MAX),
-    address_text NVARCHAR(MAX),
-    address_directions NVARCHAR(MAX),
-    postal_code NVARCHAR(MAX),
+    country NVARCHAR(255),
+    state NVARCHAR(255),
+    city NVARCHAR(255),
+    customer_address NVARCHAR(255),
+    address_text NVARCHAR(255),
+    address_directions NVARCHAR(255),
+    postal_code NVARCHAR(255),
     
     -- Metadata
     created_at DATETIME2 DEFAULT GETDATE(),
@@ -464,7 +464,7 @@ CREATE TABLE dbo.ShipmentOrder_Runs (
 CREATE TABLE dbo.ShipmentOrder_Staging (
     id INT IDENTITY(1,1) PRIMARY KEY,
     order_id INT NOT NULL,
-    raw_json NVARCHAR(MAX) NOT NULL,
+    raw_json NVARCHAR(255) NOT NULL,
     fetch_timestamp DATETIME2 DEFAULT GETDATE(),
 
     CONSTRAINT FK_ShipmentOrderStaging_ShipmentOrder 
