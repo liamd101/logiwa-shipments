@@ -10,6 +10,11 @@ from .datastructs import (
     ShipmentOrder,
     ShipmentOrderLine,
     ShipmentOrderAddress,
+    CarrierId,
+    ChannelId,
+    WarehouseOrderStatusId,
+    WarehouseFBAOrderStatusId,
+    CustomStatus,
 )
 
 from logging import error
@@ -351,33 +356,8 @@ class WarehouseOrderParser:
         if details is None:
             return []
 
-        warehouse_status_ids = data.get("WarehouseOrderStatusID", [])
-        if warehouse_status_ids is None:
-            warehouse_status_ids = []
-
-        custom_status_ids = data.get("OrderCustomStatusID", [])
-        if custom_status_ids is None:
-            custom_status_ids = []
-
-        fba_status_ids = data.get("WarehouseFBAOrderStatusID", [])
-        if fba_status_ids is None:
-            fba_status_ids = []
-
-        for (
-            detail,
-            warehouse_status_id,
-            custom_status_id,
-            fba_status_id,
-        ) in zip(
-            details,
-            warehouse_status_ids,
-            custom_status_ids,
-            fba_status_ids,
-        ):
+        for detail in details:
             line = ShipmentOrderLine(
-                warehouse_status_id=warehouse_status_id,
-                custom_status_id=custom_status_id,
-                fba_status_id=fba_status_id,
                 id=detail["ID"],
                 code=detail["Code"],
                 warehouse_order_id=warehouse_order_id,
@@ -442,6 +422,48 @@ class WarehouseOrderParser:
 
         return lines
 
+    def parse_channels(self, data: Dict[str, Any]) -> List[ChannelId]:
+        out = []
+        order_id = data["ID"]
+        channels = data.get("ChannelID", [])
+        for channel in channels:
+            out.append(ChannelId(order_id=order_id, channel_id=channel))
+        return out
+
+    def parse_warehouse_status(self, data: Dict[str, Any]) -> List[ChannelId]:
+        out = []
+        order_id = data["ID"]
+        statuses = data.get("WarehouseOrderStatusID", [])
+        for status in statuses:
+            out.append(WarehouseOrderStatusId(order_id=order_id, status_id=status))
+        return out
+
+    def parse_fba_order_statuses(self, data: Dict[str, Any]) -> List[ChannelId]:
+        out = []
+        order_id = data["ID"]
+        status_ids = data.get("WarehouseFBAOrderStatusID", [])
+        for status_id in status_ids:
+            out.append(
+                WarehouseFBAOrderStatusId(order_id=order_id, status_id=status_id)
+            )
+        return out
+
+    def parse_custom_statuses(self, data: Dict[str, Any]) -> List[ChannelId]:
+        out = []
+        order_id = data["ID"]
+        custom_ids = data.get("OrderCustomStatusID", [])
+        for custom_id in custom_ids:
+            out.append(CustomStatus(order_id=order_id, custom_id=custom_id))
+        return out
+
+    def parse_carriers(self, data: Dict[str, Any]) -> List[ChannelId]:
+        out = []
+        order_id = data["ID"]
+        carriers = data.get("CarrierID", [])
+        for carrier in carriers:
+            out.append(CarrierId(order_id=order_id, carrier_id=carrier))
+        return out
+
     def parse_addresses(self, data: Dict[str, Any]) -> List[ShipmentOrderAddress]:
         """Parse address information from ThirdPartyAccount"""
         addresses = []
@@ -491,4 +513,9 @@ class WarehouseOrderParser:
             "order": self.parse_order(data),
             "lines": self.parse_order_lines(data),
             "addresses": self.parse_addresses(data),
+            "carriers": self.parse_carriers(data),
+            "channels": self.parse_channels(data),
+            "custom_statuses": self.parse_custom_statuses(data),
+            "warehouse_statuses": self.parse_warehouse_status(data),
+            "fba_order_statuses": self.parse_fba_order_statuses(data),
         }

@@ -133,12 +133,41 @@ def clean_staging_table(connection: Connection, id: int) -> bool:
         cursor.execute(
             "DELETE FROM dbo.ShipmentOrder_Staging WHERE order_id = %s", (id,)
         )  # pymssql
-        # cursor.execute("DELETE FROM ShipmentOrder_Staging WHERE order_id = ?", (id,)) # sqlite3
+        # cursor.execute(
+        #     "DELETE FROM ShipmentOrder_Staging WHERE order_id = ?", (id,)
+        # )  # sqlite3
         connection.commit()
         return True
     except Error as e:
         logging.error(f"Error deleting entry: {e}")
         connection.rollback()
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def insert_lists(conn: Connection, data: List, table_name: str) -> bool:
+    if len(data) == 0:
+        return True
+
+    cursor = conn.cursor()
+
+    try:
+        line_dict = _dataclass_to_dict(data[0])
+        columns = ", ".join(line_dict.keys())
+        placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
+        query = f"INSERT INTO dbo.ShipmentOrder_{table_name} ({columns}) VALUES ({placeholders})"  # pymssql
+        # placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
+        # query = f"INSERT OR IGNORE INTO ShipmentOrder_{table_name} ({columns}) VALUES ({placeholders})"  # sqlite3
+        for item in data:
+            line_dict = _dataclass_to_dict(item)
+            cursor.execute(query, list(line_dict.values()))
+        conn.commit()
+        return True
+    except Error as e:
+        logging.error(f"Error deleting entry: {e}")
+        conn.rollback()
         return False
     finally:
         if cursor:
@@ -162,6 +191,25 @@ def insert_parsed_data(connection: Connection, parsed_data: Dict[str, Any]) -> b
         success &= insert_order(connection, parsed_data["order"])
         success &= insert_order_lines(connection, parsed_data["lines"])
         success &= insert_addresses(connection, parsed_data["addresses"])
+        success &= insert_lists(
+            connection, data=parsed_data["channels"], table_name="Channel"
+        )
+        success &= insert_lists(
+            connection, data=parsed_data["carriers"], table_name="Carrier"
+        )
+        success &= insert_lists(
+            connection, data=parsed_data["custom_statuses"], table_name="CustomStatus"
+        )
+        success &= insert_lists(
+            connection,
+            data=parsed_data["fba_order_statuses"],
+            table_name="WarehouseFBAOrderStatus",
+        )
+        success &= insert_lists(
+            connection,
+            data=parsed_data["warehouse_statuses"],
+            table_name="WarehouseOrderStatus",
+        )
 
         if success:
             clean_staging_table(connection, parsed_data["order"].id)
@@ -175,7 +223,7 @@ def insert_parsed_data(connection: Connection, parsed_data: Dict[str, Any]) -> b
 
 def last_fetched_date(conn: Connection) -> Optional[datetime]:
     """Checks for the most recent time that the script ran successfully. If has not ran successfully, returns None"""
-    select_query = "SELECT MAX(fetched_date) FROM dbo.ShipmentOrder_Runs WHERE success = 1"  # pymssql
+    select_query = "SELECT MAX(fetch_timestamp) FROM dbo.ShipmentOrder_Runs WHERE success = 1"  # pymssql
     # select_query = "SELECT MAX(fetch_timestamp) FROM ShipmentOrder_Runs WHERE success = 1"  # sqlite3
     cursor = conn.cursor()
     cursor.execute(select_query)

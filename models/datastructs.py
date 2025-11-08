@@ -251,9 +251,6 @@ class ShipmentOrderLine:
     quarantine_reason: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    warehouse_status_id: Optional[int] = None
-    custom_status_id: Optional[int] = None
-    fba_status_id: Optional[int] = None
 
 
 @dataclass
@@ -273,3 +270,43 @@ class ShipmentOrderAddress:
     postal_code: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+
+@dataclass
+class ChannelId:
+    """"""
+
+    order_id: int
+    channel_id: int
+
+
+@dataclass
+class WarehouseOrderStatusId:
+    """"""
+
+    order_id: int
+    status_id: int
+
+
+@dataclass
+class WarehouseFBAOrderStatusId:
+    """"""
+
+    order_id: int
+    status_id: int
+
+
+@dataclass
+class CustomStatus:
+    """"""
+
+    order_id: int
+    status_id: int
+
+
+@dataclass
+class CarrierId:
+    """"""
+
+    order_id: int
+    carrier_id: int

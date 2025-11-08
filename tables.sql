@@ -412,6 +412,43 @@ CREATE TABLE dbo.ShipmentOrder_Address (
 CREATE INDEX idx_address_warehouse_order_id ON dbo.ShipmentOrder_Address(warehouse_order_id);
 CREATE INDEX idx_address_type ON dbo.ShipmentOrder_Address(address_type);
 
+-- need some tables for this fuckass nested bullshit
+CREATE TABLE dbo.ShipmentOrder_Channel (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    channel_id INTEGER NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES dbo.ShipmentOrder(id) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.ShipmentOrder_WarehouseOrderStatus (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    status_id INTEGER NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES dbo.ShipmentOrder(id) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.ShipmentOrder_WarehouseFBAOrderStatus (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    status_id INTEGER NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES dbo.ShipmentOrder(id) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.ShipmentOrder_CustomStatus (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    status_id INTEGER NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES dbo.ShipmentOrder(id) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.ShipmentOrder_Carrier (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    carrier_id INTEGER NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES dbo.ShipmentOrder(id) ON DELETE CASCADE
+);
+
+
 -- ============================================================================
 -- RUNS TABLE
 -- ============================================================================

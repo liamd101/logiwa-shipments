@@ -22,11 +22,11 @@ def process_shipments(conn: Connection) -> bool:
     """
     success = True
     cur = conn.cursor()
-    # select_query = "SELECT * FROM dbo.ShipmentOrder_Staging" # pymssql
-    select_query = "SELECT raw_json FROM ShipmentOrder_Staging"  # pymssql
+    select_query = "SELECT * FROM dbo.ShipmentOrder_Staging" # pymssql
+    # select_query = "SELECT raw_json FROM ShipmentOrder_Staging"  # sqlite3
     cur.execute(select_query)
-    order_data = cur.fetchone()
-    while order_data:
+    orders = cur.fetchall()
+    for order_data in orders:
         shipment = WarehouseOrderParser().parse_response(order_data[0])
         success &= insert_parsed_data(conn, shipment)
         order_data = cur.fetchone()
@@ -61,8 +61,8 @@ def main() -> int:
             return -1
 
         if process_shipments(conn):
-            # conn.cursor().execute("TRUNCATE table dbo.ShipmentOrder_Staging") # pymssql
-            conn.cursor().execute("DELETE FROM ShipmentOrder_Staging")  # sqlite3
+            conn.cursor().execute("TRUNCATE table dbo.ShipmentOrder_Staging") # pymssql
+            # conn.cursor().execute("DELETE FROM ShipmentOrder_Staging")  # sqlite3
             conn.commit()
 
         success = True
