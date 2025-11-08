@@ -156,7 +156,7 @@ def insert_lists(conn: Connection, data: List, table_name: str) -> bool:
     try:
         line_dict = _dataclass_to_dict(data[0])
         columns = ", ".join(line_dict.keys())
-        placeholders = ", ".join(["%s"] * len(address_dict))  # pymssql
+        placeholders = ", ".join(["%s"] * len(line_dict))  # pymssql
         query = f"INSERT INTO dbo.ShipmentOrder_{table_name} ({columns}) VALUES ({placeholders})"  # pymssql
         # placeholders = ", ".join(["?"] * len(line_dict))  # sqlite3
         # query = f"INSERT OR IGNORE INTO ShipmentOrder_{table_name} ({columns}) VALUES ({placeholders})"  # sqlite3

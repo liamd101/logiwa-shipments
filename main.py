@@ -22,7 +22,7 @@ def process_shipments(conn: Connection) -> bool:
     """
     success = True
     cur = conn.cursor()
-    select_query = "SELECT * FROM dbo.ShipmentOrder_Staging" # pymssql
+    select_query = "SELECT raw_json FROM dbo.ShipmentOrder_Staging" # pymssql
     # select_query = "SELECT raw_json FROM ShipmentOrder_Staging"  # sqlite3
     cur.execute(select_query)
     orders = cur.fetchall()
