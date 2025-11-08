@@ -229,6 +229,9 @@ def last_fetched_date(conn: Connection) -> Optional[datetime]:
     cursor.execute(select_query)
     result = cursor.fetchone()
     if result and result[0] is not None:
-        return datetime.fromisoformat(result[0])
+        if isinstance(result[0], datetime):
+            return result[0]
+        else:
+            return datetime.fromisoformat(result[0])
     else:
         return None

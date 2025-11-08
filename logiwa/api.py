@@ -135,9 +135,6 @@ def fetch_warehouse_pages(
 
     cur = conn.cursor()
     while True:
-        if page_index > 1:
-            break
-
         orders = fetch_page(
             warehouse,
             page_index,
